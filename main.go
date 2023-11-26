@@ -21,12 +21,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
 	queryText := query.Get("query")
+	responseText := query.Get("response")
+
 	if queryText == "" {
 
 		fmt.Println(http.StatusBadRequest, w)
 	}
 
-	ApiPlatiRu := "https://plati.io/api/search.ashx?query=" + queryText
+	ApiPlatiRu := "https://plati.io/api/search.ashx?query=" + queryText + "&response=" + responseText
 	ApiPlatiRuResp, err := http.Get(ApiPlatiRu)
 	if err != nil {
 
@@ -51,8 +53,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 
 	}
-	//responseText := fmt.Sprintf("Игра: %s, цена: %d , cсылка: %s, %s ", RequestDisc.Items.Name, RequestDisc.Items.Price_rur, RequestDisc.Items.Url, RequestDisc.Items.Image)
-
+	respText := fmt.Sprintf("Игра: %s, цена: %d, ссылка: %s, %s ", RequestDisc.Items.Name, RequestDisc.Items.Price_rur, RequestDisc.Items.Url, RequestDisc.Items.Image)
+	w.Write([]byte(respText))
 }
 
 func main() {

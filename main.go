@@ -8,7 +8,7 @@ import (
 )
 
 type RequestDiscounts struct {
-	Items struct {
+	Items []struct {
 		Name      string `json:"name"`
 		Price_rur int    `json:"price_rur"`
 		Url       string `json:"url"`
@@ -21,14 +21,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
 	queryText := query.Get("query")
-	responseText := query.Get("response")
 
 	if queryText == "" {
 
 		fmt.Println(http.StatusBadRequest, w)
 	}
 
-	ApiPlatiRu := "https://plati.io/api/search.ashx?query=" + queryText + "&response=" + responseText
+	ApiPlatiRu := "https://plati.io/api/search.ashx?query=" + queryText + "&response=json"
 	ApiPlatiRuResp, err := http.Get(ApiPlatiRu)
 	if err != nil {
 
@@ -53,8 +52,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 
 	}
-	respText := fmt.Sprintf("Игра: %s, цена: %d, ссылка: %s, %s ", RequestDisc.Items.Name, RequestDisc.Items.Price_rur, RequestDisc.Items.Url, RequestDisc.Items.Image)
-	w.Write([]byte(respText))
+	respText, err := json.Marshal(RequestDisc)
+	if err != nil {
+		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+
+	w.Write(respText)
 }
 
 func main() {

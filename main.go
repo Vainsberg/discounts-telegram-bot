@@ -25,7 +25,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	pkg.Check(queryText)
 
-	rows, err := db.Query("SELECT * FROM goods WHERE query = $1 AND dt >= CURRENT_TIMESTAMP() - INTERVAL 24 HOUR;", queryText)
+	rows, err := db.Query("SELECT * FROM goods WHERE Name = ? AND dt >= CURRENT_TIMESTAMP() - INTERVAL 24 HOUR;", queryText)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -88,12 +88,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		w.Write(respText)
 
-		_, err = db.Exec("INSERT INTO goods (dt, name, price_ru, url, image, query) VALUES (CURRENT_TIMESTAMP(), ?, ?, ?, ?, ?)", pkg.Dt, pkg.Name, pkg.Price_ru, pkg.Url, pkg.Image, pkg.Query)
-		if err != nil {
-			log.Fatal(err)
-			fmt.Println(err)
-			return
+		for _, v := range responseN.Items {
+			_, err = db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", v.Name, v.Price_rur, v.Url, v.Image, pkg.Query)
+			if err != nil {
+				log.Fatal(err)
+				fmt.Println(err)
+				return
+			}
 		}
+
+		// _, err = db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", Name, Price_ru, Url, Image, pkg.Query)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// 	fmt.Println(err)
+		// 	return
+		// }
 
 	} else if len(responseN.Items) != 0 {
 		respText, err := json.Marshal(responseN)
@@ -108,7 +117,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	db, err := sql.Open("mysql", "root:1111@tcp(127.0.0.1:3306)/discounts")
+	var err error
+	db, err = sql.Open("mysql", "root:1111@tcp(127.0.0.1:3306)/discounts")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,7 +126,7 @@ func main() {
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS goods (
-			id INTEGER PRIMARY KEY,
+			id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		    name TEXT,
 			price_ru  FLOAT,
 			url TEXT,

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Vainsberg/discounts-telegram-bot/internal/dto"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
@@ -34,26 +35,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	var responseN response.RequestDiscounts
-	responseN.Items = []struct {
-		Name      string `json:"name"`
-		Price_rur int    `json:"price_rur"`
-		Url       string `json:"url"`
-		Image     string `json:"image"`
-	}{}
-
 	for rows.Next() {
-		var item struct {
-			Name      string `json:"name"`
-			Price_rur int    `json:"price_rur"`
-			Url       string `json:"url"`
-			Image     string `json:"image"`
-		}
-
+		var item dto.Item
 		err := rows.Scan(&item.Name, &item.Price_rur, &item.Url, &item.Image)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
+
 		responseN.Items = append(responseN.Items, item)
 	}
 
@@ -112,7 +101,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	var err error
 
-	db, err = sql.Open("mysql", viper.User+":"+viper.Pass+"@tcp(127.0.0.1:3306)/discounts")
+	db, err = sql.Open("mysql", viper.ViperUser()+":"+viper.ViperPass()+"@tcp(127.0.0.1:3306)/discounts")
 	if err != nil {
 		log.Fatal(err)
 	}

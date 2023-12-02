@@ -1,7 +1,5 @@
 package response
 
-import "time"
-
 type RequestDiscounts struct {
 	Items []struct {
 		Name      string `json:"name"`
@@ -11,7 +9,6 @@ type RequestDiscounts struct {
 	} `json:"items"`
 }
 
-type ResponseQueryandTime struct {
-	Query string    `json:"query"`
-	Dt    time.Time `json:"dt"`
+type ResponseQuery struct {
+	Query string `json:"query"`
 }

@@ -8,8 +8,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Vainsberg/discounts-telegram-bot/pkg"
-	"github.com/Vainsberg/discounts-telegram-bot/response"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -25,7 +26,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	pkg.Check(queryText)
 
-	rows, err := db.Query("SELECT * FROM goods WHERE Name = ? AND dt >= CURRENT_TIMESTAMP() - INTERVAL 24 HOUR;", queryText)
+	rows, err := db.Query("SELECT name, price_ru, url, image FROM goods WHERE query = ? AND dt >= CURRENT_TIMESTAMP() - INTERVAL 24 HOUR;", queryText)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -47,6 +48,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			Url       string `json:"url"`
 			Image     string `json:"image"`
 		}
+
 		err := rows.Scan(&item.Name, &item.Price_rur, &item.Url, &item.Image)
 		if err != nil {
 			log.Fatal(err)
@@ -85,24 +87,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			fmt.Errorf("json.Marshal error: %s", err)
 			return
 		}
-
 		w.Write(respText)
 
 		for _, v := range responseN.Items {
-			_, err = db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", v.Name, v.Price_rur, v.Url, v.Image, pkg.Query)
+			_, err = db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", v.Name, v.Price_rur, v.Url, v.Image, queryText)
 			if err != nil {
 				log.Fatal(err)
 				fmt.Println(err)
 				return
 			}
 		}
-
-		// _, err = db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", Name, Price_ru, Url, Image, pkg.Query)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// 	fmt.Println(err)
-		// 	return
-		// }
 
 	} else if len(responseN.Items) != 0 {
 		respText, err := json.Marshal(responseN)
@@ -111,14 +105,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			return
 		}
-
 		w.Write(respText)
 	}
 }
 
 func main() {
 	var err error
-	db, err = sql.Open("mysql", "root:1111@tcp(127.0.0.1:3306)/discounts")
+
+	db, err = sql.Open("mysql", viper.User+":"+viper.Pass+"@tcp(127.0.0.1:3306)/discounts")
 	if err != nil {
 		log.Fatal(err)
 	}

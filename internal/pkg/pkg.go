@@ -2,13 +2,11 @@ package pkg
 
 import (
 	"time"
-
-	"github.com/Vainsberg/discounts-telegram-bot/response"
 )
 
-var responseone response.RequestDiscounts
+//var responseone response.RequestDiscounts
 
-var responsetwo response.ResponseQueryandTime
+//var responsetwo response.ResponseQuery
 
 // var Name string
 // var Price_ru int
@@ -26,7 +24,6 @@ func Scan() {
 	// 		Image = v.Image
 
 	// 	}
-	Query = responsetwo.Query
-	Dt = responsetwo.Dt
+	//Query = responsetwo.Query
 
 }

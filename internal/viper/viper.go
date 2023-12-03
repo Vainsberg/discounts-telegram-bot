@@ -8,15 +8,21 @@ import (
 
 var Pass, User string
 
+type Config struct {
+	DbUser string
+	DbPass string
+}
+
 func ViperUser() string {
 	var err error
+	var config Config
 
 	viper.SetConfigFile("config.yaml")
 	err = viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
-	User = viper.GetString("UserbymySQL")
+	config.DbUser = viper.GetString("UserbymySQL")
 
 	return User
 
@@ -24,13 +30,14 @@ func ViperUser() string {
 
 func ViperPass() string {
 	var err error
+	var config Config
 
 	viper.SetConfigFile("config.yaml")
 	err = viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
-	Pass = viper.GetString("PassbymySQL")
+	config.DbPass = viper.GetString("PassbymySQL")
 
 	return Pass
 

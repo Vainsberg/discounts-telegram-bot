@@ -8,17 +8,23 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Vainsberg/discounts-telegram-bot/internal/dto"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
-	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
+	"github.com/Vainsberg/discounts-telegram-bot/repository"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
 
-func handler(w http.ResponseWriter, r *http.Request) {
+type Handler struct {
+	discountsRepository repository.Repository
+}
+
+func NewHandler(repos *repository.Repository) *Handler {
+	return &Handler{discountsRepository: *repos}
+}
+func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	queryText := query.Get("query")
 	if queryText == "" {
@@ -27,24 +33,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	pkg.Check(queryText)
 
-	rows, err := db.Query("SELECT name, price_ru, url, image FROM goods WHERE query = ? AND dt >= CURRENT_TIMESTAMP() - INTERVAL 24 HOUR;", queryText)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	defer rows.Close()
-
-	var responseN response.RequestDiscounts
-	for rows.Next() {
-		var item dto.Item
-		err := rows.Scan(&item.Name, &item.Price_rur, &item.Url, &item.Image)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-
-		responseN.Items = append(responseN.Items, item)
-	}
+	responseN := h.discountsRepository.GetDiscountsByGoods(queryText)
 
 	if len(responseN.Items) == 0 {
 		ApiPlatiRu := "https://plati.io/api/search.ashx?query=" + queryText + "&response=json"
@@ -77,14 +66,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Write(respText)
-
 		for _, v := range responseN.Items {
-			_, err = db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", v.Name, v.Price_rur, v.Url, v.Image, queryText)
-			if err != nil {
-				log.Fatal(err)
-				fmt.Println(err)
-				return
-			}
+			h.discountsRepository.GetDiscountsAddendumByGoods(v.Name, float64(v.Price_rur), v.Url, v.Image, queryText)
 		}
 
 	} else if len(responseN.Items) != 0 {
@@ -99,9 +82,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	var cfg viper.Config
 	var err error
-
-	db, err = sql.Open("mysql", viper.ViperUser()+":"+viper.ViperPass()+"@tcp(127.0.0.1:3306)/discounts")
+	db, err = sql.Open("mysql", cfg.DbUser+":"+cfg.DbPass+"@tcp(127.0.0.1:3306)/discounts")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -122,7 +105,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/discount", handler)
+	http.HandleFunc("/discount", GetDiscounts)
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		fmt.Println("Ошибка запуска сервера:", err)

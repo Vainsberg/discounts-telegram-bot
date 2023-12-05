@@ -6,39 +6,22 @@ import (
 	"github.com/spf13/viper"
 )
 
-var Pass, User string
-
 type Config struct {
 	DbUser string
 	DbPass string
 }
 
-func ViperUser() string {
+func NewConfig() (*Config, error) {
 	var err error
-	var config Config
 
 	viper.SetConfigFile("config.yaml")
 	err = viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
-	config.DbUser = viper.GetString("UserbymySQL")
 
-	return User
+	dbUser := viper.GetString("UserbymySQL")
+	dbPass := viper.GetString("PassbymySQL")
 
-}
-
-func ViperPass() string {
-	var err error
-	var config Config
-
-	viper.SetConfigFile("config.yaml")
-	err = viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s", err))
-	}
-	config.DbPass = viper.GetString("PassbymySQL")
-
-	return Pass
-
+	return &Config{DbUser: dbUser, DbPass: dbPass}, nil
 }

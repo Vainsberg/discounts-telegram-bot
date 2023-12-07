@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/handler"
 	getDiscounts "github.com/Vainsberg/discounts-telegram-bot/internal/handler"
-	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg/client"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
-	"github.com/Vainsberg/discounts-telegram-bot/repository"
 	_ "github.com/go-sql-driver/mysql"
 )
 

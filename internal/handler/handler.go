@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
-	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg/client"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 	"github.com/Vainsberg/discounts-telegram-bot/repository"
 )
@@ -22,7 +22,6 @@ func NewHandler(repos *repository.Repository, plati *client.PlatiClient) *Handle
 }
 
 func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
-
 	query := r.URL.Query()
 	queryText := query.Get("query")
 	if queryText == "" {
@@ -31,10 +30,6 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 	}
 	pkg.Check(queryText)
 	responseN := h.DiscountsRepository.GetDiscountsByGoods(queryText)
-	// if err != nil {
-	// 	fmt.Errorf("GetGoodsClient error: %s", err)
-	// 	return
-	// }
 
 	if len(responseN.Items) == 0 {
 		goods, err := h.DiscountsPlatiClient.GetGoodsClient(queryText)
@@ -43,7 +38,7 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for _, v := range goods.Items {
-			h.DiscountsRepository.GetDiscountsAddendumByGoods(v.Name, float64(v.Price_rur), v.Url, v.Image, queryText)
+			h.DiscountsRepository.SaveGood(v.Name, float64(v.Price_rur), v.Url, v.Image, queryText)
 		}
 
 	} else if len(responseN.Items) != 0 {

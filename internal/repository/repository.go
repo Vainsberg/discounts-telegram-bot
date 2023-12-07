@@ -42,7 +42,7 @@ func (r *Repository) GetDiscountsByGoods(queryText string) response.RequestDisco
 
 }
 
-func (r *Repository) GetDiscountsAddendumByGoods(name string, price_rur float64, url string, image string, queryText string) {
+func (r *Repository) SaveGood(name string, price_rur float64, url string, image string, queryText string) {
 	responseN := response.RequestDiscounts{}
 	for _, v := range responseN.Items {
 		_, err := r.db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", v.Name, v.Price_rur, v.Url, v.Image, queryText)

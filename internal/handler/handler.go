@@ -7,8 +7,8 @@ import (
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
-	"github.com/Vainsberg/discounts-telegram-bot/repository"
 )
 
 type Handler struct {

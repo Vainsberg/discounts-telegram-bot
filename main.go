@@ -6,6 +6,7 @@ import (
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/handler"
 	getDiscounts "github.com/Vainsberg/discounts-telegram-bot/internal/handler"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg/client"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
 	"github.com/Vainsberg/discounts-telegram-bot/repository"
 	_ "github.com/go-sql-driver/mysql"
@@ -21,7 +22,8 @@ func main() {
 	db := getDiscounts.CreateDB(cfg)
 	defer db.Close()
 	repository := repository.NewRepository(db)
-	handler := handler.NewHandler(repository)
+	api := client.NewPlatiClient("https://plati.io")
+	handler := handler.NewHandler(repository, api)
 	http.HandleFunc("/discount", handler.GetDiscounts)
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {

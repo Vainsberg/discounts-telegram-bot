@@ -37,18 +37,21 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 			fmt.Errorf("DiscountsPlatiClient error: %s", err)
 			return
 		}
+
 		for _, v := range goods.Items {
 			h.DiscountsRepository.SaveGood(v.Name, float64(v.Price_rur), v.Url, v.Image, queryText)
 		}
 
-	} else if len(responseN.Items) != 0 {
-		var response response.RequestDiscounts
-		respText, err := json.Marshal(response)
+		respText, err := json.Marshal(goods)
 		if err != nil {
 			http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
 			fmt.Println(err)
 			return
 		}
 		w.Write(respText)
+
+	} else if len(responseN.Items) != 0 {
+		var response response.RequestDiscounts
+		w.Write(client.DateFromDatebase(response))
 	}
 }

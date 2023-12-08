@@ -40,3 +40,12 @@ func (c *PlatiClient) GetGoodsClient(queryText string) (*response.RequestDiscoun
 
 	return &discounts, nil
 }
+
+func DateFromDatebase(response response.RequestDiscounts) []byte {
+	respText, err := json.Marshal(response)
+	if err != nil {
+		fmt.Errorf("Error encoding JSON response %s", err)
+		panic(fmt.Sprintf("Error encoding JSON response: %s", err))
+	}
+	return respText
+}

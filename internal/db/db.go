@@ -1,4 +1,4 @@
-package handler
+package db
 
 import (
 	"database/sql"
@@ -7,12 +7,10 @@ import (
 	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
 )
 
-var db *sql.DB
-
 func CreateDB(cfg *viper.Config) *sql.DB {
 	var err error
 
-	db, err = sql.Open("mysql", cfg.DbUser+":"+cfg.DbPass+"@tcp(127.0.0.1:3306)/discounts")
+	db, err := sql.Open("mysql", cfg.DbUser+":"+cfg.DbPass+"@tcp(127.0.0.1:3306)/discounts")
 	if err != nil {
 		log.Fatal(err)
 	}

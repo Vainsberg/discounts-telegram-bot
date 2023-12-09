@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/dto"
@@ -44,6 +45,7 @@ func (r *Repository) GetDiscountsByGoods(queryText string) response.RequestDisco
 func (r *Repository) SaveGood(name string, price_rur float64, url string, image string, queryText string) error {
 	_, err := r.db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", name, price_rur, url, image, queryText)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil

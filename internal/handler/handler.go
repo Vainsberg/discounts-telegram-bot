@@ -18,41 +18,37 @@ type Handler struct {
 func NewHandler(repos *repository.Repository, plati *client.PlatiClient) *Handler {
 	return &Handler{
 		DiscountsRepository:  *repos,
-		DiscountsPlatiClient: *plati}
+		DiscountsPlatiClient: *plati,
+	}
 }
 
 func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
-
-	query := r.URL.Query()
-	queryText := query.Get("query")
-	if queryText == "" {
-		fmt.Println(http.StatusBadRequest, w)
-		return
-	}
-	CheckQueryText := pkg.Check(queryText)
+	query := pkg.GetQuery(r.URL.Query().Get("query"))
+	CheckQueryText := pkg.Check(query)
 	responseN := h.DiscountsRepository.GetDiscountsByGoods(CheckQueryText)
 
-	if len(responseN.Items) == 0 {
-		var err error
-		goods, err := h.DiscountsPlatiClient.GetGoodsClient(CheckQueryText)
-		if err != nil {
-			fmt.Errorf("DiscountsPlatiClient error: %s", err)
-			return
-		}
-
-		for _, v := range goods.Items {
-			h.DiscountsRepository.SaveGood(v.Name, float64(v.Price_rur), v.Url, v.Image, queryText)
-		}
-
-		respText, err := json.Marshal(goods)
-		if err != nil {
-			http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
-			fmt.Println(err)
-			return
-		}
-		w.Write(respText)
-
-	} else {
+	if len(responseN.Items) != 0 {
 		w.Write(client.DateFromDatebase(responseN))
 	}
+
+	goods, err := h.DiscountsPlatiClient.GetGoodsClient(CheckQueryText)
+	if err != nil {
+		fmt.Errorf("DiscountsPlatiClient error: %s", err)
+		return
+	}
+
+	for _, v := range goods.Items {
+		err := h.DiscountsRepository.SaveGood(v.Name, float64(v.Price_rur), v.Url, v.Image, CheckQueryText)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	respText, err := json.Marshal(goods)
+	if err != nil {
+		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+	w.Write(respText)
 }

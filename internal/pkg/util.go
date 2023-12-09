@@ -5,11 +5,10 @@ import "strings"
 func Check(text string) string {
 	var output string
 	for _, v := range text {
-		vstr := string(v)
-		if vstr == "%" {
+		if string(v) == "%" {
 			output = strings.Replace(text, "%", "", -1)
 		} else {
-			continue
+			output += string(v)
 		}
 
 	}

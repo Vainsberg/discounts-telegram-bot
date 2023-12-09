@@ -8,7 +8,6 @@ import (
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
-	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 )
 
 type Handler struct {
@@ -17,22 +16,25 @@ type Handler struct {
 }
 
 func NewHandler(repos *repository.Repository, plati *client.PlatiClient) *Handler {
-	return &Handler{DiscountsRepository: *repos,
+	return &Handler{
+		DiscountsRepository:  *repos,
 		DiscountsPlatiClient: *plati}
 }
 
 func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
+
 	query := r.URL.Query()
 	queryText := query.Get("query")
 	if queryText == "" {
 		fmt.Println(http.StatusBadRequest, w)
 		return
 	}
-	pkg.Check(queryText)
-	responseN := h.DiscountsRepository.GetDiscountsByGoods(queryText)
+	CheckQueryText := pkg.Check(queryText)
+	responseN := h.DiscountsRepository.GetDiscountsByGoods(CheckQueryText)
 
 	if len(responseN.Items) == 0 {
-		goods, err := h.DiscountsPlatiClient.GetGoodsClient(queryText)
+		var err error
+		goods, err := h.DiscountsPlatiClient.GetGoodsClient(CheckQueryText)
 		if err != nil {
 			fmt.Errorf("DiscountsPlatiClient error: %s", err)
 			return
@@ -50,8 +52,7 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write(respText)
 
-	} else if len(responseN.Items) != 0 {
-		var response response.RequestDiscounts
-		w.Write(client.DateFromDatebase(response))
+	} else {
+		w.Write(client.DateFromDatebase(responseN))
 	}
 }

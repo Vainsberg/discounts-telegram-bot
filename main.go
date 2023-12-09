@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/db"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/handler"
-	getDiscounts "github.com/Vainsberg/discounts-telegram-bot/internal/handler"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
 	_ "github.com/go-sql-driver/mysql"
@@ -19,7 +19,7 @@ func main() {
 		fmt.Println("Error:", err)
 		return
 	}
-	db := getDiscounts.CreateDB(cfg)
+	db := db.CreateDB(cfg)
 	defer db.Close()
 	repository := repository.NewRepository(db)
 	api := client.NewPlatiClient("https://plati.io")

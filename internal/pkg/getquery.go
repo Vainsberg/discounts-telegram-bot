@@ -1,14 +1,15 @@
 package pkg
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 )
 
-func GetQuery(text string) string {
+func GetQuery(text string) (string, error) {
 	if text == "" {
 		fmt.Println(http.StatusBadRequest)
-		return "error"
+		return "", errors.New("empty query")
 	}
-	return text
+	return text, nil
 }

@@ -23,12 +23,17 @@ func NewHandler(repos *repository.Repository, plati *client.PlatiClient) *Handle
 }
 
 func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
-	query := pkg.GetQuery(r.URL.Query().Get("query"))
+	query, err := pkg.GetQuery(r.URL.Query().Get("query"))
+	if err != nil {
+		fmt.Errorf("GetQuery error: %s", err)
+		return
+	}
 	CheckQueryText := pkg.Check(query)
 	responseN := h.DiscountsRepository.GetDiscountsByGoods(CheckQueryText)
 
 	if len(responseN.Items) != 0 {
 		w.Write(client.DateFromDatebase(responseN))
+		return
 	}
 
 	goods, err := h.DiscountsPlatiClient.GetGoodsClient(CheckQueryText)

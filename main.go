@@ -11,6 +11,7 @@ import (
 	"github.com/Vainsberg/discounts-telegram-bot/internal/handler"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
+	_ "github.com/go-sql-driver/mysql"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -33,11 +34,14 @@ func main() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
-	for update := range updates {
-		if update.Message != nil {
-			bottg.HandleRequest(bot, update.Message)
+
+	go func() {
+		for update := range updates {
+			if update.Message != nil {
+				bottg.HandleRequest(bot, update.Message)
+			}
 		}
-	}
+	}()
 
 	db := db.CreateDB(cfg)
 	defer db.Close()

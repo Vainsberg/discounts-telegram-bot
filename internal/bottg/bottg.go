@@ -51,6 +51,7 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 		return
 	}
 	var text string
+
 	for _, v := range result.Items {
 		text = fmt.Sprintf(
 			"*%s*\n"+

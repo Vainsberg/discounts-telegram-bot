@@ -34,10 +34,24 @@ func main() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
-
 	go func() {
 		for update := range updates {
-			if update.Message != nil {
+			if update.Message == nil {
+				continue
+			}
+			if update.Message.Text == "/start" {
+				replyKeyboard := tgbotapi.NewReplyKeyboard(
+					tgbotapi.NewKeyboardButtonRow(
+						tgbotapi.NewKeyboardButton("Подписаться на скидки"),
+					),
+				)
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Нажми кнопку:")
+				msg.ReplyMarkup = replyKeyboard
+				_, err := bot.Send(msg)
+				if err != nil {
+					log.Println("Ошибка при отправке сообщения боту:", err)
+				}
+			} else {
 				bottg.HandleRequest(bot, update.Message)
 			}
 		}

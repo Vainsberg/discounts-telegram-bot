@@ -10,7 +10,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbotapi.Update) {
 	type TextMessage struct {
 		Items []struct {
 			Name      string `json:"name"`
@@ -51,7 +51,6 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 		return
 	}
 	var text string
-
 	for _, v := range result.Items {
 		text = fmt.Sprintf(
 			"*%s*\n"+
@@ -59,9 +58,10 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 				"*Ссылка* _%s_\n"+
 				"*Фото* _%s_\n",
 			v.Name, v.Price_rur, v.Url, v.Image)
-		reply := tgbotapi.NewMessage(message.Chat.ID, text)
-		reply.ParseMode = "Markdown"
-		_, err = bot.Send(reply)
+		chatID := update.Message.Chat.ID
+		messageID := update.Message.MessageID
+		editMsg := tgbotapi.NewEditMessageText(chatID, messageID, text)
+		_, err = bot.Send(editMsg)
 		if err != nil {
 			log.Println("Ошибка при отправке сообщения боту:", err)
 		}

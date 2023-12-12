@@ -39,6 +39,7 @@ func main() {
 			if update.Message == nil {
 				continue
 			}
+
 			if update.Message.Text == "/start" {
 				replyKeyboard := tgbotapi.NewReplyKeyboard(
 					tgbotapi.NewKeyboardButtonRow(
@@ -52,9 +53,11 @@ func main() {
 					log.Println("Ошибка при отправке сообщения боту:", err)
 				}
 			} else {
-				bottg.HandleRequest(bot, update.Message)
+				bottg.HandleRequest(bot, update.Message, &update)
+
 			}
 		}
+
 	}()
 
 	db := db.CreateDB(cfg)

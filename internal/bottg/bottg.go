@@ -1,6 +1,8 @@
 package bottg
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -9,6 +11,15 @@ import (
 )
 
 func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+	type TextMessage struct {
+		Items []struct {
+			Name      string `json:"name"`
+			Price_rur int    `json:"price_rur"`
+			Url       string `json:"url"`
+			Image     string `json:"image"`
+		} `json:"items"`
+	}
+
 	if message.Text == "" {
 		errorMsg := "Неправильная форма заполнения. Пожалуйста, введите нормальное название товара."
 		reply := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
@@ -32,10 +43,26 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 		log.Println("Ошибка при чтении тела ответа:", err)
 		return
 	}
+	var result TextMessage
 
-	reply := tgbotapi.NewMessage(message.Chat.ID, string(body))
-	_, err = bot.Send(reply)
+	err = json.Unmarshal(body, &result)
 	if err != nil {
-		log.Println("Ошибка при отправке сообщения боту:", err)
+		log.Println("Ошибка при разборе JSON:", err)
+		return
+	}
+	var text string
+	for _, v := range result.Items {
+		text = fmt.Sprintf(
+			"*%s*\n"+
+				"*Rub* _%v_\n"+
+				"*Ссылка* _%s_\n"+
+				"*Фото* _%s_\n",
+			v.Name, v.Price_rur, v.Url, v.Image)
+		reply := tgbotapi.NewMessage(message.Chat.ID, text)
+		reply.ParseMode = "Markdown"
+		_, err = bot.Send(reply)
+		if err != nil {
+			log.Println("Ошибка при отправке сообщения боту:", err)
+		}
 	}
 }

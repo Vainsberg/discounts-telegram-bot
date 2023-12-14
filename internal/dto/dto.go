@@ -6,3 +6,10 @@ type Item struct {
 	Url       string `json:"url"`
 	Image     string `json:"image"`
 }
+
+type LinkedAndAccounts struct {
+	Name      string
+	Price_rur int
+	Url       string
+	Image     string
+}

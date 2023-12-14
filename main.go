@@ -40,22 +40,32 @@ func main() {
 				continue
 			}
 
-			if update.Message.Text == "/start" {
+			if update.Message.Text == "start" {
 				replyKeyboard := tgbotapi.NewReplyKeyboard(
 					tgbotapi.NewKeyboardButtonRow(
 						tgbotapi.NewKeyboardButton("Подписаться на скидки"),
 					),
 				)
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Нажми кнопку:")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Нажми на кнопку:")
 				msg.ReplyMarkup = replyKeyboard
 				_, err := bot.Send(msg)
 				if err != nil {
 					log.Println("Ошибка при отправке сообщения боту:", err)
 				}
+			} else if update.CallbackQuery != nil {
+				callback := update.CallbackQuery
+				if callback.Data == "Подписаться на скидки" {
+					user := update.Message.From
+					userID := user.ID
+					UserIDtext := fmt.Sprintf("%d", userID)
+					bottg.AddLincked(UserIDtext, update.Message.Text)
+					subscriptionMessage := tgbotapi.NewMessage(callback.Message.Chat.ID, "Вы подписались на скидки!")
+					bot.Send(subscriptionMessage)
+				}
 			} else {
 				bottg.HandleRequest(bot, update.Message, &update)
-
 			}
+
 		}
 
 	}()

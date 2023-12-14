@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -30,8 +31,9 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		return
 	}
 	userText := message.Text
+	checkUserText := pkg.Check(userText)
 
-	resp, err := http.Get("http://localhost:8080/discount?query=" + userText + "&response=json")
+	resp, err := http.Get("http://localhost:8080/discount?query=" + checkUserText + "&response=json")
 	if err != nil {
 		log.Println("Ошибка при создании HTTP-запроса:", err)
 		return
@@ -51,19 +53,31 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		return
 	}
 	var text string
-	for _, v := range result.Items {
+	slice := result.Items
+	for _, v := range slice {
 		text = fmt.Sprintf(
 			"*%s*\n"+
 				"*Rub* _%v_\n"+
-				"*Ссылка* _%s_\n"+
-				"*Фото* _%s_\n",
-			v.Name, v.Price_rur, v.Url, v.Image)
+				"*Ссылка* _%s_\n",
+			v.Name, v.Price_rur, v.Url)
 		chatID := update.Message.Chat.ID
-		messageID := update.Message.MessageID
-		editMsg := tgbotapi.NewEditMessageText(chatID, messageID, text)
-		_, err = bot.Send(editMsg)
+		respy, err := http.Get("https:" + v.Image)
+		if err != nil {
+			log.Println("Ошибка при получении изображения:", err)
+			continue
+		}
+		defer respy.Body.Close()
+
+		reader := tgbotapi.FileReader{Name: "photo.jpg", Reader: respy.Body}
+		photoMsg := tgbotapi.NewPhoto(chatID, reader)
+		_, err = bot.Send(photoMsg)
 		if err != nil {
 			log.Println("Ошибка при отправке сообщения боту:", err)
 		}
+
+		msg := tgbotapi.NewMessage(message.Chat.ID, text)
+		msg.ParseMode = "markdown"
+		_, err = bot.Send(msg)
+
 	}
 }

@@ -14,7 +14,6 @@ func CreateDB(cfg *viper.Config) *sql.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS goods (
 			id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -26,6 +25,19 @@ func CreateDB(cfg *viper.Config) *sql.DB {
 			query TEXT
 		)
 	`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS linked_accounts (
+			id INTEGER PRIMARY KEY AUTO_INCREMENT,
+			name TEXT,
+			goods_id INTEGER,
+			query TEXT,
+			FOREIGN KEY (goods_id) REFERENCES goods(id)
+		)
+			`)
+
 	if err != nil {
 		log.Fatal(err)
 	}

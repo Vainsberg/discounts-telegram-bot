@@ -34,36 +34,34 @@ func main() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
+
 	go func() {
 		for update := range updates {
-			if update.Message == nil {
-				continue
-			}
-
-			if update.Message.Text == "start" {
-				replyKeyboard := tgbotapi.NewReplyKeyboard(
-					tgbotapi.NewKeyboardButtonRow(
-						tgbotapi.NewKeyboardButton("Подписаться на скидки"),
+			if update.Message != nil {
+				bottg.HandleRequest(bot, update.Message, &update)
+				userText := update.Message.Text
+				replyKeyboard := tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Подписаться на скидки", userText),
 					),
 				)
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Нажми на кнопку:")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Нажми на кнопку для подписки на товар :)")
 				msg.ReplyMarkup = replyKeyboard
-				_, err := bot.Send(msg)
-				if err != nil {
-					log.Println("Ошибка при отправке сообщения боту:", err)
+				if _, err = bot.Send(msg); err != nil {
+					panic(err)
 				}
 			} else if update.CallbackQuery != nil {
 				callback := update.CallbackQuery
-				if callback.Data == "Подписаться на скидки" {
-					user := update.Message.From
-					userID := user.ID
-					UserIDtext := fmt.Sprintf("%d", userID)
-					bottg.AddLincked(UserIDtext, update.Message.Text)
-					subscriptionMessage := tgbotapi.NewMessage(callback.Message.Chat.ID, "Вы подписались на скидки!")
-					bot.Send(subscriptionMessage)
+				if callback.Data != "" {
+					userText := callback.Data
+					chatID := callback.Message.Chat.ID
+					ChatIDtext := fmt.Sprintf("%d", chatID)
+					bottg.AddLincked(ChatIDtext, userText)
+					callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вы подписались на товар")
+					if _, err := bot.Request(callback); err != nil {
+						panic(err)
+					}
 				}
-			} else {
-				bottg.HandleRequest(bot, update.Message, &update)
 			}
 
 		}

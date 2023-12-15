@@ -11,7 +11,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbotapi.Update) string {
+func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbotapi.Update) {
 	type TextMessage struct {
 		Items []struct {
 			Name      string `json:"name"`
@@ -28,7 +28,7 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		if err != nil {
 			log.Println("Ошибка при отправке сообщения боту:", err)
 		}
-		return ""
+		return
 	}
 	userText := message.Text
 	checkUserText := pkg.Check(userText)
@@ -36,21 +36,21 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 	resp, err := http.Get("http://localhost:8080/discount?query=" + checkUserText + "&response=json")
 	if err != nil {
 		log.Println("Ошибка при создании HTTP-запроса:", err)
-		return ""
+		return
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("Ошибка при чтении тела ответа:", err)
-		return ""
+		return
 	}
 	var result TextMessage
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		log.Println("Ошибка при разборе JSON:", err)
-		return ""
+		return
 	}
 	var text string
 	slice := result.Items
@@ -80,5 +80,5 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		_, err = bot.Send(msg)
 
 	}
-	return checkUserText
+
 }

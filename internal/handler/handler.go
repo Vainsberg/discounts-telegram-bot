@@ -13,12 +13,14 @@ import (
 type Handler struct {
 	DiscountsRepository  repository.Repository
 	DiscountsPlatiClient client.PlatiClient
+	SubsRepository       repository.RepositorySubs
 }
 
-func NewHandler(repos *repository.Repository, plati *client.PlatiClient) *Handler {
+func NewHandler(repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs) *Handler {
 	return &Handler{
 		DiscountsRepository:  *repos,
 		DiscountsPlatiClient: *plati,
+		SubsRepository:       *subs,
 	}
 }
 
@@ -56,4 +58,9 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(respText)
+}
+
+func (h *Handler) LinkedSubs(chatID string, text string) {
+
+	h.SubsRepository.AddLincked(chatID, text)
 }

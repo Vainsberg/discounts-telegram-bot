@@ -54,7 +54,8 @@ func main() {
 					userText := callback.Data
 					chatID := callback.Message.Chat.ID
 					ChatIDtext := fmt.Sprintf("%d", chatID)
-					bottg.AddLincked(ChatIDtext, userText)
+					handler := &handler.Handler{}
+					handler.LinkedSubs(ChatIDtext, userText)
 					callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вы подписались на товар")
 					if _, err := bot.Request(callback); err != nil {
 						panic(err)
@@ -66,9 +67,10 @@ func main() {
 
 	db := db.CreateDB(cfg)
 	defer db.Close()
-	repository := repository.NewRepository(db)
+	repositoryGoods := repository.NewRepository(db)
+	RepositorySubs := repository.NewRepositorySubs(db)
 	api := client.NewPlatiClient("https://plati.io")
-	handler := handler.NewHandler(repository, api)
+	handler := handler.NewHandler(repositoryGoods, api, RepositorySubs)
 	http.HandleFunc("/discount", handler.GetDiscounts)
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {

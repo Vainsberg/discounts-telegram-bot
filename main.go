@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -51,30 +49,7 @@ func main() {
 					panic(err)
 				}
 			} else if update.CallbackQuery != nil {
-				callback := update.CallbackQuery
-
-				if callback.Data != "" {
-					userText := callback.Data
-					chatID := callback.Message.Chat.ID
-					ApiURL := "http://localhost:8080/subscribe"
-					payload := fmt.Sprintf("chat_id=%d&text=%s", chatID, userText)
-					payloadmash, err := json.Marshal(payload)
-					if err != nil {
-						log.Println("Ошибка JSON:", err)
-						return
-					}
-					resp, err := http.Post(ApiURL, "application/json", bytes.NewBuffer(payloadmash))
-					if err != nil {
-						fmt.Println("Ошибка при выполнении запроса:", err)
-						return
-					}
-					defer resp.Body.Close()
-
-					callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вы подписались на товар")
-					if _, err := bot.Request(callback); err != nil {
-						panic(err)
-					}
-				}
+				bottg.HandleCallback(bot, update.Message, &update)
 			}
 		}
 	}()

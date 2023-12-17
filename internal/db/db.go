@@ -31,7 +31,7 @@ func CreateDB(cfg *viper.Config) *sql.DB {
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS subscriptions (
 			id INTEGER PRIMARY KEY AUTO_INCREMENT,
-			chat_id INTEGER,
+			chat_id BIGINT,
 			query TEXT
 		)
 		  `)

@@ -1,12 +1,14 @@
 package bottg
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 
+	"github.com/Vainsberg/discounts-telegram-bot/internal/handler"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -81,4 +83,32 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 
 	}
 
+}
+
+func HandleCallback(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbotapi.Update) {
+	callback := update.CallbackQuery
+	if callback.Data != "" {
+		userText := callback.Data
+		chatID := callback.Message.Chat.ID
+		ApiURL := "http://localhost:8080/subscribe"
+
+		payload := handler.SubscriptionRequest{ChatID: chatID, Text: userText}
+		payloadmash, err := json.Marshal(payload)
+		if err != nil {
+			fmt.Errorf("Ошибка Marshal JSON: %s", err)
+			return
+		}
+
+		resp, err := http.Post(ApiURL, "application/json", bytes.NewBuffer(payloadmash))
+		if err != nil {
+			fmt.Println("Ошибка при выполнении запроса:", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вы подписались на товар")
+		if _, err := bot.Request(callback); err != nil {
+			panic(err)
+		}
+	}
 }

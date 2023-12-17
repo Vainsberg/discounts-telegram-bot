@@ -62,11 +62,13 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 	w.Write(respText)
 }
 
+type SubscriptionRequest struct {
+	ChatID int64  `json:"chat_id"`
+	Text   string `json:"text"`
+}
+
 func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
-	type SubscriptionRequest struct {
-		ChatID int    `json:"chat_id"`
-		Text   string `json:"text"`
-	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		fmt.Errorf("Read body error: %s", err)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -55,9 +56,14 @@ func main() {
 				if callback.Data != "" {
 					userText := callback.Data
 					chatID := callback.Message.Chat.ID
-					ApiURL := "http://localhost:8080/subscribe/"
+					ApiURL := "http://localhost:8080/subscribe"
 					payload := fmt.Sprintf("chat_id=%d&text=%s", chatID, userText)
-					resp, err := http.Post(ApiURL, "application/json", bytes.NewBufferString(payload))
+					payloadmash, err := json.Marshal(payload)
+					if err != nil {
+						log.Println("Ошибка JSON:", err)
+						return
+					}
+					resp, err := http.Post(ApiURL, "application/json", bytes.NewBuffer(payloadmash))
 					if err != nil {
 						fmt.Println("Ошибка при выполнении запроса:", err)
 						return

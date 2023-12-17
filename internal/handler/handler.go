@@ -69,6 +69,12 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		fmt.Errorf("Read body error: %s", err)
+		return
+
+	}
+
+	if err != nil {
 		http.Error(w, "Ошибка при чтении тела запроса", http.StatusBadRequest)
 		return
 	}

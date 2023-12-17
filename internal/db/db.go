@@ -29,18 +29,14 @@ func CreateDB(cfg *viper.Config) *sql.DB {
 		log.Fatal(err)
 	}
 	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS linked_accounts (
+		CREATE TABLE IF NOT EXISTS subscriptions (
 			id INTEGER PRIMARY KEY AUTO_INCREMENT,
-			name TEXT,
-			goods_id INTEGER,
-			query TEXT,
-			FOREIGN KEY (goods_id) REFERENCES goods(id)
+			chat_id INTEGER,
+			query TEXT
 		)
-			`)
-
+		  `)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	return db
 }

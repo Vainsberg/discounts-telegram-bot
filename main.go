@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -50,12 +51,19 @@ func main() {
 				}
 			} else if update.CallbackQuery != nil {
 				callback := update.CallbackQuery
+
 				if callback.Data != "" {
 					userText := callback.Data
 					chatID := callback.Message.Chat.ID
-					ChatIDtext := fmt.Sprintf("%d", chatID)
-					handler := &handler.Handler{}
-					handler.LinkedSubs(ChatIDtext, userText)
+					ApiURL := "http://localhost:8080/subscribe/"
+					payload := fmt.Sprintf("chat_id=%d&text=%s", chatID, userText)
+					resp, err := http.Post(ApiURL, "application/json", bytes.NewBufferString(payload))
+					if err != nil {
+						fmt.Println("Ошибка при выполнении запроса:", err)
+						return
+					}
+					defer resp.Body.Close()
+
 					callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вы подписались на товар")
 					if _, err := bot.Request(callback); err != nil {
 						panic(err)
@@ -67,11 +75,13 @@ func main() {
 
 	db := db.CreateDB(cfg)
 	defer db.Close()
+
 	repositoryGoods := repository.NewRepository(db)
 	RepositorySubs := repository.NewRepositorySubs(db)
 	api := client.NewPlatiClient("https://plati.io")
 	handler := handler.NewHandler(repositoryGoods, api, RepositorySubs)
 	http.HandleFunc("/discount", handler.GetDiscounts)
+	http.HandleFunc("/subscribe", handler.AddSubscription)
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		fmt.Println("Ошибка запуска сервера:", err)

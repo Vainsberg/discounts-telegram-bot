@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
@@ -60,7 +62,22 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 	w.Write(respText)
 }
 
-func (h *Handler) LinkedSubs(chatID string, text string) {
+func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
+	type SubscriptionRequest struct {
+		ChatID int    `json:"chat_id"`
+		Text   string `json:"text"`
+	}
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Ошибка при чтении тела запроса", http.StatusBadRequest)
+		return
+	}
+	var result SubscriptionRequest
 
-	h.SubsRepository.AddLincked(chatID, text)
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		log.Println("Ошибка при разборе JSON:", err)
+		return
+	}
+	h.SubsRepository.AddLincked(result.ChatID, result.Text)
 }

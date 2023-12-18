@@ -85,7 +85,7 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 
 }
 
-func HandleCallback(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbotapi.Update) {
+func HandleCallback(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 	callback := update.CallbackQuery
 	if callback.Data != "" {
 		userText := callback.Data
@@ -108,7 +108,8 @@ func HandleCallback(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgb
 
 		callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вы подписались на товар")
 		if _, err := bot.Request(callback); err != nil {
-			panic(err)
+			fmt.Errorf("Ошибка отправки сообщения callback: %s", err)
+			return
 		}
 	}
 }

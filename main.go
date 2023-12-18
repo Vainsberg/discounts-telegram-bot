@@ -49,7 +49,7 @@ func main() {
 					panic(err)
 				}
 			} else if update.CallbackQuery != nil {
-				bottg.HandleCallback(bot, update.Message, &update)
+				bottg.HandleCallback(bot, &update)
 			}
 		}
 	}()

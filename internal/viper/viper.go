@@ -7,8 +7,10 @@ import (
 )
 
 type Config struct {
-	DbUser string
-	DbPass string
+	DbUser       string
+	DbPass       string
+	Apikey       string
+	DiscountsApi string
 }
 
 func NewConfig() (*Config, error) {
@@ -22,6 +24,7 @@ func NewConfig() (*Config, error) {
 
 	dbUser := viper.GetString("UserbymySQL")
 	dbPass := viper.GetString("PassbymySQL")
+	apiKey := viper.GetString("ApiKey")
 
-	return &Config{DbUser: dbUser, DbPass: dbPass}, nil
+	return &Config{DbUser: dbUser, DbPass: dbPass, Apikey: apiKey}, nil
 }

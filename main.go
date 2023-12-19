@@ -13,15 +13,24 @@ import (
 	"github.com/Vainsberg/discounts-telegram-bot/internal/viper"
 	_ "github.com/go-sql-driver/mysql"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/robfig/cron"
 )
 
 func main() {
+
 	var err error
 	cfg, err := viper.NewConfig()
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
+	c := cron.New()
+
+	c.AddFunc("*/1 * * * *", func() {
+		fmt.Println("Hello World")
+	})
+
+	c.Start()
 
 	bot, err := tgbotapi.NewBotAPI(cfg.Apikey)
 	if err != nil {
@@ -68,4 +77,5 @@ func main() {
 		fmt.Println("Ошибка запуска сервера:", err)
 		return
 	}
+	select {}
 }

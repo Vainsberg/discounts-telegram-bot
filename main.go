@@ -68,10 +68,12 @@ func main() {
 
 	repositoryGoods := repository.NewRepository(db)
 	RepositorySubs := repository.NewRepositorySubs(db)
+	RepositoryQueys := repository.NewRepositoryQuerys(db)
 	api := client.NewPlatiClient("https://plati.io")
-	handler := handler.NewHandler(repositoryGoods, api, RepositorySubs)
+	handler := handler.NewHandler(repositoryGoods, api, RepositorySubs, RepositoryQueys)
 	http.HandleFunc("/discount", handler.GetDiscounts)
 	http.HandleFunc("/subscribe", handler.AddSubscription)
+	http.HandleFunc("/discount/update", handler.GetQuerysCron)
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		fmt.Println("Ошибка запуска сервера:", err)

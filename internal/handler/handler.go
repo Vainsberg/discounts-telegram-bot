@@ -16,13 +16,15 @@ type Handler struct {
 	DiscountsRepository  repository.Repository
 	DiscountsPlatiClient client.PlatiClient
 	SubsRepository       repository.RepositorySubs
+	RepositoryQuerys     repository.RepositoryQuerys
 }
 
-func NewHandler(repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs) *Handler {
+func NewHandler(repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs, querys *repository.RepositoryQuerys) *Handler {
 	return &Handler{
 		DiscountsRepository:  *repos,
 		DiscountsPlatiClient: *plati,
 		SubsRepository:       *subs,
+		RepositoryQuerys:     *querys,
 	}
 }
 
@@ -88,4 +90,23 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.SubsRepository.AddLincked(result.ChatID, result.Text)
+}
+
+func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
+	query, err := h.RepositoryQuerys.GetQuerys()
+	if err != nil {
+		fmt.Errorf("DiscountsPlatiClient error: %s", err)
+		return
+	}
+
+	for _, v := range query.Items {
+		goods, err := h.DiscountsPlatiClient.GetGoodsClient(v.Query)
+		if err != nil {
+			fmt.Errorf("DiscountsPlatiClient error: %s", err)
+			return
+		}
+		for _, el := range goods.Items {
+			h.DiscountsRepository.SaveGood(el.Name, float64(el.Price_rur), el.Url, el.Image, v.Query)
+		}
+	}
 }

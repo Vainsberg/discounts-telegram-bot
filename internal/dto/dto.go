@@ -13,3 +13,13 @@ type LinkedAndAccounts struct {
 	Url       string
 	Image     string
 }
+
+type GetQuerysItem struct {
+	Query string `json:"query"`
+}
+
+type GetQuerys struct {
+	Items []struct {
+		Query string `json:"query"`
+	} `json:"items"`
+}

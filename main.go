@@ -7,6 +7,7 @@ import (
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/bottg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
+	cronhandler "github.com/Vainsberg/discounts-telegram-bot/internal/cron_handler"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/db"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/handler"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
@@ -24,12 +25,11 @@ func main() {
 		fmt.Println("Error:", err)
 		return
 	}
+
 	c := cron.New()
-
-	c.AddFunc("*/1 * * * *", func() {
-		fmt.Println("Hello World")
+	c.AddFunc("*/5 * * * *", func() {
+		cronhandler.HandleCron()
 	})
-
 	c.Start()
 
 	bot, err := tgbotapi.NewBotAPI(cfg.Apikey)
@@ -68,7 +68,7 @@ func main() {
 
 	repositoryGoods := repository.NewRepository(db)
 	RepositorySubs := repository.NewRepositorySubs(db)
-	RepositoryQueys := repository.NewRepositoryQuerys(db)
+	RepositoryQueys := repository.NewRepositorySubs(db)
 	api := client.NewPlatiClient("https://plati.io")
 	handler := handler.NewHandler(repositoryGoods, api, RepositorySubs, RepositoryQueys)
 	http.HandleFunc("/discount", handler.GetDiscounts)

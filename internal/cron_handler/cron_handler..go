@@ -1,4 +1,4 @@
-package cronquerys
+package cronhandler
 
 import (
 	"fmt"

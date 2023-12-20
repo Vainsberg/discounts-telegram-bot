@@ -16,10 +16,10 @@ type Handler struct {
 	DiscountsRepository  repository.Repository
 	DiscountsPlatiClient client.PlatiClient
 	SubsRepository       repository.RepositorySubs
-	RepositoryQuerys     repository.RepositoryQuerys
+	RepositoryQuerys     repository.RepositorySubs
 }
 
-func NewHandler(repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs, querys *repository.RepositoryQuerys) *Handler {
+func NewHandler(repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs, querys *repository.RepositorySubs) *Handler {
 	return &Handler{
 		DiscountsRepository:  *repos,
 		DiscountsPlatiClient: *plati,

@@ -6,7 +6,7 @@ import (
 )
 
 func HandleCron() {
-	ApiURL := "http://localhost:8080/discounts/update"
+	ApiURL := "http://localhost:8080/discount/update"
 	resp, err := http.Post(ApiURL, "application/json", nil)
 	if err != nil {
 		fmt.Println("Ошибка при выполнении запроса:", err)

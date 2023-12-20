@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
@@ -105,6 +106,7 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 			fmt.Errorf("DiscountsPlatiClient error: %s", err)
 			return
 		}
+		time.Sleep(5 * time.Second)
 		for _, el := range goods.Items {
 			h.DiscountsRepository.SaveGood(el.Name, float64(el.Price_rur), el.Url, el.Image, v.Query)
 		}

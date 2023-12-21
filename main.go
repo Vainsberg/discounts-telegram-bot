@@ -15,6 +15,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/robfig/cron"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	}
 
 	c := cron.New()
-	c.AddFunc("*/5 * * * *", func() {
+	c.AddFunc(cfg.CountCron, func() {
 		cronhandler.HandleCron()
 	})
 	c.Start()
@@ -41,6 +42,12 @@ func main() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
+
+	logger, err := zap.NewProduction()
+	if err != nil {
+		panic("Error create logger")
+	}
+	defer logger.Sync()
 
 	go func() {
 		for update := range updates {
@@ -70,7 +77,7 @@ func main() {
 	RepositorySubs := repository.NewRepositorySubs(db)
 	RepositoryQueys := repository.NewRepositorySubs(db)
 	api := client.NewPlatiClient("https://plati.io")
-	handler := handler.NewHandler(repositoryGoods, api, RepositorySubs, RepositoryQueys)
+	handler := handler.NewHandler(logger, repositoryGoods, api, RepositorySubs, RepositoryQueys)
 	http.HandleFunc("/discount", handler.GetDiscounts)
 	http.HandleFunc("/subscribe", handler.AddSubscription)
 	http.HandleFunc("/discount/update", handler.GetQuerysCron)

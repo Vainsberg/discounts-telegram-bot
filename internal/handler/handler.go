@@ -11,17 +11,20 @@ import (
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
+	Logger               *zap.Logger
 	DiscountsRepository  repository.Repository
 	DiscountsPlatiClient client.PlatiClient
 	SubsRepository       repository.RepositorySubs
 	RepositoryQuerys     repository.RepositorySubs
 }
 
-func NewHandler(repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs, querys *repository.RepositorySubs) *Handler {
+func NewHandler(logger *zap.Logger, repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs, querys *repository.RepositorySubs) *Handler {
 	return &Handler{
+		Logger:               logger,
 		DiscountsRepository:  *repos,
 		DiscountsPlatiClient: *plati,
 		SubsRepository:       *subs,
@@ -30,6 +33,8 @@ func NewHandler(repos *repository.Repository, plati *client.PlatiClient, subs *r
 }
 
 func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Info("Launch GetDiscounts")
+
 	query, err := pkg.GetQuery(r.URL.Query().Get("query"))
 	if err != nil {
 		fmt.Errorf("GetQuery error: %s", err)
@@ -71,6 +76,7 @@ type SubscriptionRequest struct {
 }
 
 func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Info("AddSubscription")
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -94,6 +100,8 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Info("GetQuerysCron")
+
 	query, err := h.RepositoryQuerys.GetQuerys()
 	if err != nil {
 		fmt.Errorf("DiscountsPlatiClient error: %s", err)
@@ -101,12 +109,12 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, v := range query.Items {
+		time.Sleep(5 * time.Second)
 		goods, err := h.DiscountsPlatiClient.GetGoodsClient(v.Query)
 		if err != nil {
 			fmt.Errorf("DiscountsPlatiClient error: %s", err)
 			return
 		}
-		time.Sleep(5 * time.Second)
 		for _, el := range goods.Items {
 			h.DiscountsRepository.SaveGood(el.Name, float64(el.Price_rur), el.Url, el.Image, v.Query)
 		}

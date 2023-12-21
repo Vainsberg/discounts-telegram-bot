@@ -11,6 +11,7 @@ type Config struct {
 	DbPass       string
 	Apikey       string
 	DiscountsApi string
+	CountCron    string
 }
 
 func NewConfig() (*Config, error) {
@@ -25,6 +26,7 @@ func NewConfig() (*Config, error) {
 	dbUser := viper.GetString("UserbymySQL")
 	dbPass := viper.GetString("PassbymySQL")
 	apiKey := viper.GetString("ApiKey")
+	countCron := viper.GetString("CountCron")
 
-	return &Config{DbUser: dbUser, DbPass: dbPass, Apikey: apiKey}, nil
+	return &Config{DbUser: dbUser, DbPass: dbPass, Apikey: apiKey, CountCron: countCron}, nil
 }

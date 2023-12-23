@@ -55,18 +55,18 @@ func (r *Repository) SaveGoodCron(name string, price_rur float64, url string, im
 	var resultBefore float64
 	var resultAfter float64
 
-	row := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE query = ?;", queryText)
-	if err := row.Scan(&resultBefore); err != nil && err != sql.ErrNoRows {
-		return err
-	}
-
 	_, err := r.db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", name, price_rur, url, image, queryText)
 	if err != nil {
 		return err
 	}
 
-	rank := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE query = ?;", queryText)
-	if err := rank.Scan(&resultAfter); err != nil && err != sql.ErrNoRows {
+	rank := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE query = ? AND dt >= DATE_SUB(NOW(), INTERVAL 1 WEEK);", queryText)
+	if err := rank.Scan(&resultBefore); err != nil && err != sql.ErrNoRows {
+		return err
+	}
+
+	row := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE query = ?;", queryText)
+	if err := row.Scan(&resultAfter); err != nil && err != sql.ErrNoRows {
 		return err
 	}
 

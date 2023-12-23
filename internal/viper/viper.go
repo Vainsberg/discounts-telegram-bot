@@ -7,11 +7,10 @@ import (
 )
 
 type Config struct {
-	DbUser       string
-	DbPass       string
-	Apikey       string
-	DiscountsApi string
-	CountCron    string
+	DbUser    string
+	DbPass    string
+	Apikey    string
+	CountCron string
 }
 
 func NewConfig() (*Config, error) {

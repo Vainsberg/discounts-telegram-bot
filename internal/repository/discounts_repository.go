@@ -60,12 +60,12 @@ func (r *Repository) SaveGoodCron(name string, price_rur float64, url string, im
 		return err
 	}
 
-	rank := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE query = ? AND dt >= DATE_SUB(NOW(), INTERVAL 1 WEEK);", queryText)
+	rank := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE dt >= DATE_SUB(NOW(), INTERVAL 1 WEEK) and url = ?;", url)
 	if err := rank.Scan(&resultBefore); err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
-	row := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE query = ?;", queryText)
+	row := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE url = ?;", url)
 	if err := row.Scan(&resultAfter); err != nil && err != sql.ErrNoRows {
 		return err
 	}

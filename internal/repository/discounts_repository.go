@@ -50,7 +50,7 @@ func (r *Repository) SaveGood(name string, price_rur float64, url string, image 
 	return nil
 }
 
-func (r *Repository) SearchDiscount(price_rur float64, url string) float64 {
+func (r *Repository) SearchAveragePrice(price_rur float64, url string) float64 {
 	var resultBefore float64
 	rank := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE dt >= DATE_SUB(NOW(), INTERVAL 1 WEEK) and url = ?;", url)
 	if err := rank.Scan(&resultBefore); err != nil && err != sql.ErrNoRows {

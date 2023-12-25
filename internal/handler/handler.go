@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
+	cronhandler "github.com/Vainsberg/discounts-telegram-bot/internal/cron_handler"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
 	"go.uber.org/zap"
@@ -115,19 +116,20 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 			fmt.Errorf("DiscountsPlatiClient error: %s", err)
 			return
 		}
+
 		for _, el := range goods.Items {
 			h.DiscountsRepository.SaveGood(el.Name, float64(el.Price_rur), el.Url, el.Image, v.Query)
-			pastPrice := h.DiscountsRepository.SearchDiscount(float64(el.Price_rur), el.Url)
+			pastPrice := h.DiscountsRepository.SearchAveragePrice(float64(el.Price_rur), el.Url)
 
 			if pastPrice < float64(el.Price_rur) {
 				rebate := pkg.CalculatePercentageDifference(pastPrice, float64(el.Price_rur))
 
-				if rebate >= 15 && rebate <= 20 {
+				if rebate >= 20 {
+					h.SubsRepository.SearchChatID(v.Query)
+					goodDiscounts := cronhandler.ProductDiscounts(el.Name, float64(el.Price_rur), el.Url, el.Image)
 
 				}
 			}
-
 		}
 	}
-
 }

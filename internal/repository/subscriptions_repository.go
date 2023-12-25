@@ -47,3 +47,13 @@ func (r *RepositorySubs) GetQuerys() (dto.GetQuerys, error) {
 	return responseN, nil
 
 }
+func (r *RepositorySubs) SearchChatID(query string) int {
+	var ChatIDbyDiscounts int
+	rank := r.db.QueryRow("SELECT chat_id FROM subscriptions WHERE query = ?;", query)
+	if err := rank.Scan(&ChatIDbyDiscounts); err != nil && err != sql.ErrNoRows {
+		return 0
+	}
+
+	return ChatIDbyDiscounts
+
+}

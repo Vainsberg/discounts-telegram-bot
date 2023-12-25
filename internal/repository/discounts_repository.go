@@ -37,7 +37,6 @@ func (r *Repository) GetDiscountsByGoods(queryText string) response.RequestDisco
 		}
 		responseN.Items = append(responseN.Items, item)
 	}
-
 	return responseN
 
 }
@@ -51,24 +50,13 @@ func (r *Repository) SaveGood(name string, price_rur float64, url string, image 
 	return nil
 }
 
-func (r *Repository) SaveGoodCron(name string, price_rur float64, url string, image string, queryText string) error {
+func (r *Repository) SearchDiscount(price_rur float64, url string) float64 {
 	var resultBefore float64
-	var resultAfter float64
-
-	_, err := r.db.Exec("INSERT INTO goods (name, price_ru, url, image, dt, query) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(), ?)", name, price_rur, url, image, queryText)
-	if err != nil {
-		return err
-	}
-
 	rank := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE dt >= DATE_SUB(NOW(), INTERVAL 1 WEEK) and url = ?;", url)
 	if err := rank.Scan(&resultBefore); err != nil && err != sql.ErrNoRows {
-		return err
+		return 0
 	}
 
-	row := r.db.QueryRow("SELECT avg(price_ru) FROM goods WHERE url = ?;", url)
-	if err := row.Scan(&resultAfter); err != nil && err != sql.ErrNoRows {
-		return err
-	}
+	return resultBefore
 
-	return nil
 }

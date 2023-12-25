@@ -117,6 +117,17 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 		}
 		for _, el := range goods.Items {
 			h.DiscountsRepository.SaveGood(el.Name, float64(el.Price_rur), el.Url, el.Image, v.Query)
+			pastPrice := h.DiscountsRepository.SearchDiscount(float64(el.Price_rur), el.Url)
+
+			if pastPrice < float64(el.Price_rur) {
+				rebate := pkg.CalculatePercentageDifference(pastPrice, float64(el.Price_rur))
+
+				if rebate >= 15 && rebate <= 20 {
+
+				}
+			}
+
 		}
 	}
+
 }

@@ -12,3 +12,12 @@ type RequestDiscounts struct {
 type ResponseQuery struct {
 	Query string `json:"query"`
 }
+
+type ProductDiscount struct {
+	Items []struct {
+		Name      string `json:"name"`
+		Price_rur int    `json:"price_rur"`
+		Url       string `json:"url"`
+		Image     string `json:"image"`
+	} `json:"items"`
+}

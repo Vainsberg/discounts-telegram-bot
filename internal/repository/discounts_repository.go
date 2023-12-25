@@ -37,6 +37,7 @@ func (r *Repository) GetDiscountsByGoods(queryText string) response.RequestDisco
 		}
 		responseN.Items = append(responseN.Items, item)
 	}
+
 	return responseN
 
 }

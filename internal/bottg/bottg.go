@@ -8,21 +8,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Vainsberg/discounts-telegram-bot/internal/handler"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbotapi.Update) {
-	type TextMessage struct {
-		Items []struct {
-			Name      string `json:"name"`
-			Price_rur int    `json:"price_rur"`
-			Url       string `json:"url"`
-			Image     string `json:"image"`
-		} `json:"items"`
-	}
-
 	if message.Text == "" {
 		errorMsg := "Неправильная форма заполнения. Пожалуйста, введите нормальное название товара."
 		reply := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
@@ -47,7 +38,7 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		log.Println("Ошибка при чтении тела ответа:", err)
 		return
 	}
-	var result TextMessage
+	var result response.TextMessage
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
@@ -80,9 +71,7 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		msg := tgbotapi.NewMessage(message.Chat.ID, text)
 		msg.ParseMode = "markdown"
 		_, err = bot.Send(msg)
-
 	}
-
 }
 
 func HandleCallback(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
@@ -92,7 +81,7 @@ func HandleCallback(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 		chatID := callback.Message.Chat.ID
 		ApiURL := "http://localhost:8080/subscribe"
 
-		payload := handler.SubscriptionRequest{ChatID: chatID, Text: userText}
+		payload := response.SubscriptionRequest{ChatID: chatID, Text: userText}
 		payloadmash, err := json.Marshal(payload)
 		if err != nil {
 			fmt.Errorf("Ошибка Marshal JSON: %s", err)

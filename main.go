@@ -19,7 +19,6 @@ import (
 )
 
 func main() {
-
 	var err error
 	cfg, err := viper.NewConfig()
 	if err != nil {

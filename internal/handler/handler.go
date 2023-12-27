@@ -12,6 +12,7 @@ import (
 	cronhandler "github.com/Vainsberg/discounts-telegram-bot/internal/cron_handler"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.uber.org/zap"
 )
@@ -74,11 +75,6 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 	w.Write(respText)
 }
 
-type SubscriptionRequest struct {
-	ChatID int64  `json:"chat_id"`
-	Text   string `json:"text"`
-}
-
 func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Info("AddSubscription")
 
@@ -93,7 +89,7 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка при чтении тела запроса", http.StatusBadRequest)
 		return
 	}
-	var result SubscriptionRequest
+	var result response.SubscriptionRequest
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
@@ -128,6 +124,7 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 				if rebate >= 20 {
 					chat := h.SubsRepository.SearchChatID(v.Query)
 					goodDiscounts := cronhandler.ProductDiscounts(el.Name, float64(el.Price_rur), el.Url, el.Image)
+
 					for _, v := range goodDiscounts.Items {
 						text := fmt.Sprintf(
 							"*%s*\n"+
@@ -148,6 +145,7 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 						if err != nil {
 							log.Println("Ошибка при отправке сообщения боту:", err)
 						}
+
 						msg := tgbotapi.NewMessage(chatID, text)
 						msg.ParseMode = "markdown"
 						_, err = h.Bot.Send(msg)

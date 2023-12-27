@@ -15,7 +15,6 @@ func HandleCron() {
 		return
 	}
 	defer resp.Body.Close()
-
 }
 
 func ProductDiscounts(name string, price_rur float64, url string, image string) response.ProductDiscount {

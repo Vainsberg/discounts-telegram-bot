@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Vainsberg/discounts-telegram-bot/internal/bottg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	cronhandler "github.com/Vainsberg/discounts-telegram-bot/internal/cron_handler"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
@@ -21,6 +22,7 @@ type Handler struct {
 	DiscountsPlatiClient client.PlatiClient
 	SubsRepository       repository.RepositorySubs
 	RepositoryQuerys     repository.RepositorySubs
+	Bot                  bottg.BotTg
 }
 
 func NewHandler(logger *zap.Logger, repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs, querys *repository.RepositorySubs) *Handler {

@@ -26,7 +26,6 @@ func (r *RepositorySubs) AddLincked(chatID int64, text string) error {
 }
 
 func (r *RepositorySubs) GetQuerys() (dto.GetQuerys, error) {
-
 	rows, err := r.db.Query("SELECT DISTINCT query FROM subscriptions")
 	if err != nil {
 		log.Fatal(err)
@@ -47,8 +46,8 @@ func (r *RepositorySubs) GetQuerys() (dto.GetQuerys, error) {
 	return responseN, nil
 
 }
-func (r *RepositorySubs) SearchChatID(query string) int {
-	var ChatIDbyDiscounts int
+func (r *RepositorySubs) SearchChatID(query string) int64 {
+	var ChatIDbyDiscounts int64
 	rank := r.db.QueryRow("SELECT chat_id FROM subscriptions WHERE query = ?;", query)
 	if err := rank.Scan(&ChatIDbyDiscounts); err != nil && err != sql.ErrNoRows {
 		return 0

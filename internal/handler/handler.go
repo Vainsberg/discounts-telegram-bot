@@ -42,7 +42,7 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 
 	query, err := pkg.GetQuery(r.URL.Query().Get("query"))
 	if err != nil {
-		fmt.Errorf("GetQuery error: %s", err)
+		h.Logger.Info("GetQuery error:", zap.Error(err))
 		return
 	}
 	CheckQueryText := pkg.Check(query)
@@ -55,7 +55,7 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 
 	goods, err := h.DiscountsPlatiClient.GetGoodsClient(CheckQueryText)
 	if err != nil {
-		fmt.Errorf("DiscountsPlatiClient error: %s", err)
+		h.Logger.Info("DiscountsPlatiClient error:", zap.Error(err))
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 	respText, err := json.Marshal(goods)
 	if err != nil {
 		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
-		fmt.Println(err)
+		h.Logger.Info("Error encoding JSON response", zap.Error(err))
 		return
 	}
 	w.Write(respText)
@@ -80,9 +80,8 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Errorf("Read body error: %s", err)
+		h.Logger.Info("Read body error:", zap.Error(err))
 		return
-
 	}
 
 	if err != nil {
@@ -93,7 +92,7 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		log.Println("Ошибка при разборе JSON:", err)
+		h.Logger.Info("Ошибка при разборе JSON:", zap.Error(err))
 		return
 	}
 	h.SubsRepository.AddLincked(result.ChatID, result.Text)
@@ -102,15 +101,16 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 	query, err := h.RepositoryQuerys.GetQuerys()
 	if err != nil {
-		fmt.Errorf("DiscountsPlatiClient error: %s", err)
+		h.Logger.Info("DiscountsPlatiClient error:", zap.Error(err))
 		return
 	}
 
 	for _, v := range query.Items {
+		h.Logger.Info("Sleep 5 second...", zap.String("query", v.Query))
 		time.Sleep(5 * time.Second)
 		goods, err := h.DiscountsPlatiClient.GetGoodsClient(v.Query)
 		if err != nil {
-			fmt.Errorf("DiscountsPlatiClient error: %s", err)
+			h.Logger.Info("DiscountsPlatiClient error:", zap.Error(err))
 			return
 		}
 

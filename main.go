@@ -85,5 +85,4 @@ func main() {
 		fmt.Println("Ошибка запуска сервера:", err)
 		return
 	}
-	select {}
 }

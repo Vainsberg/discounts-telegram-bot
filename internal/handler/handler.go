@@ -68,8 +68,8 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 
 	respText, err := json.Marshal(goods)
 	if err != nil {
-		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
 		h.Logger.Info("Error encoding JSON response", zap.Error(err))
+		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
 		return
 	}
 	w.Write(respText)
@@ -85,6 +85,7 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		h.Logger.Info("Ошибка при чтении тела запроса", zap.Error(err))
 		http.Error(w, "Ошибка при чтении тела запроса", http.StatusBadRequest)
 		return
 	}

@@ -1,17 +1,18 @@
 package cronhandler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
+	"go.uber.org/zap"
 )
 
 func HandleCron() {
+	var logger zap.Logger
 	ApiURL := "http://localhost:8080/discount/update"
 	resp, err := http.Post(ApiURL, "application/json", nil)
 	if err != nil {
-		fmt.Println("Ошибка при выполнении запроса:", err)
+		logger.Info("Ошибка при выполнении запроса:", zap.Error(err))
 		return
 	}
 	defer resp.Body.Close()

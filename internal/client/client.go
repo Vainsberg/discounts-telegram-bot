@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
+	"go.uber.org/zap"
 )
 
 type PlatiClient struct {
@@ -35,17 +36,17 @@ func (c *PlatiClient) GetGoodsClient(queryText string) (*response.RequestDiscoun
 	var discounts response.RequestDiscounts
 	err = json.Unmarshal(r, &discounts)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal error: %s", err)
+		return nil, fmt.Errorf("Error Unmarshal: %s", url, err)
 	}
 
 	return &discounts, nil
 }
 
 func DateFromDatebase(response response.RequestDiscounts) []byte {
+	var logger zap.Logger
 	respText, err := json.Marshal(response)
 	if err != nil {
-		fmt.Errorf("Error encoding JSON response %s", err)
-		panic(fmt.Sprintf("Error encoding JSON response: %s", err))
+		logger.Info("Error encoding JSON response:", zap.Error(err))
 	}
 	return respText
 }

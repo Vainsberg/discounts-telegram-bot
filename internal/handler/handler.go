@@ -62,7 +62,7 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 	for _, v := range goods.Items {
 		err := h.DiscountsRepository.SaveGood(v.Name, float64(v.Price_rur), v.Url, v.Image, CheckQueryText)
 		if err != nil {
-			fmt.Println(err)
+			h.Logger.Info("Error SaveGood", zap.Error(err))
 		}
 	}
 
@@ -122,6 +122,7 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 				rebate := pkg.CalculatePercentageDifference(pastPrice, float64(el.Price_rur))
 
 				if rebate >= 20 {
+					h.Logger.Info("Finding the updated price", zap.Int("Price_rur", el.Price_rur))
 					chat := h.SubsRepository.SearchChatID(v.Query)
 					goodDiscounts := cronhandler.ProductDiscounts(el.Name, float64(el.Price_rur), el.Url, el.Image)
 
@@ -148,6 +149,7 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 
 						msg := tgbotapi.NewMessage(chatID, text)
 						msg.ParseMode = "markdown"
+						h.Logger.Info("Product withdrawal with a discount")
 						_, err = h.Bot.Send(msg)
 					}
 				}

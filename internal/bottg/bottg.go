@@ -11,7 +11,13 @@ import (
 	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"go.uber.org/zap"
 )
+
+type RequestCron struct {
+	Logger *zap.Logger
+	Bot    *tgbotapi.BotAPI
+}
 
 func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbotapi.Update) {
 	if message.Text == "" {
@@ -24,7 +30,7 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		return
 	}
 	userText := message.Text
-	checkUserText := pkg.Check(userText)
+	checkUserText := pkg.ReplaceSpaceUrl(userText)
 
 	resp, err := http.Get("http://localhost:8080/discount?query=" + checkUserText + "&response=json")
 	if err != nil {
@@ -100,5 +106,34 @@ func HandleCallback(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 			fmt.Errorf("Ошибка отправки сообщения callback: %s", err)
 			return
 		}
+	}
+}
+
+func (h *RequestCron) HandleRequestCron(goodDiscounts *response.ProductDiscount, chat int64) {
+	for _, v := range goodDiscounts.Items {
+		text := fmt.Sprintf(
+			"*%s*\n"+
+				"*Rub* _%v_\n"+
+				"*Ссылка* _%s_\n",
+			v.Name, v.Price_rur, v.Url)
+		chatID := chat
+		respy, err := http.Get("https:" + v.Image)
+		if err != nil {
+			log.Println("Ошибка при получении изображения:", err)
+			continue
+		}
+		defer respy.Body.Close()
+
+		reader := tgbotapi.FileReader{Name: "photo.jpg", Reader: respy.Body}
+		photoMsg := tgbotapi.NewPhoto(chatID, reader)
+		_, err = h.Bot.Send(photoMsg)
+		if err != nil {
+			log.Println("Ошибка при отправке сообщения боту:", err)
+		}
+
+		msg := tgbotapi.NewMessage(chatID, text)
+		msg.ParseMode = "markdown"
+		h.Logger.Info("Product withdrawal with a discount")
+		_, err = h.Bot.Send(msg)
 	}
 }

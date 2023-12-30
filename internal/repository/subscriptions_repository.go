@@ -26,7 +26,8 @@ func (r *RepositorySubs) AddLincked(chatID int64, text string) error {
 func (r *RepositorySubs) GetQuerys() (dto.GetQuerys, error) {
 	rows, err := r.db.Query("SELECT DISTINCT query FROM subscriptions")
 	if err != nil {
-		log.Fatal(err)
+		return dto.GetQuerys{}, err
+
 	}
 	defer rows.Close()
 
@@ -36,8 +37,8 @@ func (r *RepositorySubs) GetQuerys() (dto.GetQuerys, error) {
 		err := rows.Scan(&item.Query)
 		if err != nil {
 			log.Fatal(err)
-
 		}
+
 		responseN.Items = append(responseN.Items, item)
 	}
 	return responseN, nil

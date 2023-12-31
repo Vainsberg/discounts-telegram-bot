@@ -9,8 +9,7 @@ import (
 
 func HandleCron() {
 	var logger zap.Logger
-	ApiURL := "http://localhost:8080/discount/update"
-	resp, err := http.Post(ApiURL, "application/json", nil)
+	resp, err := http.Post("http://localhost:8080/discount/update", "application/json", nil)
 	if err != nil {
 		logger.Info("Ошибка при выполнении запроса:", zap.Error(err))
 		return

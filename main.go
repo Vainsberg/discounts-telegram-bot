@@ -21,6 +21,7 @@ import (
 
 func main() {
 	var err error
+
 	cfg, err := viper.NewConfig()
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -37,6 +38,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
 	bot.Debug = true
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 	u := tgbotapi.NewUpdate(0)
@@ -77,7 +79,7 @@ func main() {
 	RepositorySubs := repository.NewRepositorySubs(db)
 	RepositoryQueys := repository.NewRepositorySubs(db)
 	api := client.NewPlatiClient("https://plati.io")
-	service := service.NewService(db)
+	service := service.NewService(logger, *api, RepositoryQueys, RepositorySubs, *repositoryGoods, *bot)
 	handler := handler.NewHandler(logger, repositoryGoods, api, RepositorySubs, RepositoryQueys, bot, *service)
 	http.HandleFunc("/discount", handler.GetDiscounts)
 	http.HandleFunc("/subscribe", handler.AddSubscription)

@@ -44,37 +44,27 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 		h.Logger.Info("GetQuery error:", zap.Error(err))
 		return
 	}
-	CheckQueryText := pkg.ReplaceSpaceUrl(query)
-	responseN := h.DiscountsRepository.GetDiscountsByGoods(CheckQueryText)
+	ReplaceText := pkg.ReplaceSpaceUrl(query)
+	discountsByGoods := h.DiscountsRepository.GetDiscountsByGoods(ReplaceText)
 
-	if len(responseN.Items) != 0 {
-		w.Write(client.DateFromDatebase(responseN))
+	if len(discountsByGoods.Items) != 0 {
+		w.Write(client.ConvertRequestDiscountsToJSON(discountsByGoods))
 		return
 	}
 
-	goods, err := h.DiscountsPlatiClient.GetGoodsClient(CheckQueryText)
-	if err != nil {
-		h.Logger.Info("DiscountsPlatiClient error:", zap.Error(err))
-		return
-	}
+	goods := h.Service.FetchAndSaveGoods(ReplaceText)
 
-	for _, v := range goods.Items {
-		err := h.DiscountsRepository.SaveGood(v.Name, float64(v.Price_rur), v.Url, v.Image, CheckQueryText)
-		if err != nil {
-			h.Logger.Info("Error SaveGood", zap.Error(err))
-		}
-	}
-
-	respText, err := json.Marshal(goods)
+	bytes, err := json.Marshal(goods)
 	if err != nil {
 		h.Logger.Info("Error encoding JSON response", zap.Error(err))
 		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
 		return
 	}
-	w.Write(respText)
+	w.Write(bytes)
 }
 
 func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
+	var subscriptionRequest response.SubscriptionRequest
 	h.Logger.Info("AddSubscription")
 
 	body, err := io.ReadAll(r.Body)
@@ -88,17 +78,20 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка при чтении тела запроса", http.StatusBadRequest)
 		return
 	}
-	var result response.SubscriptionRequest
 
-	err = json.Unmarshal(body, &result)
+	err = json.Unmarshal(body, &subscriptionRequest)
 	if err != nil {
 		h.Logger.Info("Ошибка при разборе JSON:", zap.Error(err))
 		return
 	}
-	h.SubsRepository.AddLincked(result.ChatID, result.Text)
+	h.SubsRepository.AddLincked(subscriptionRequest.ChatID, subscriptionRequest.Text)
 }
 
 func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
-	h.Service.ProcessQueryAndFetchGoods()
+	err := h.Service.ProcessQueryAndFetchGoods()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
 
 }

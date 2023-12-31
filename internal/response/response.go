@@ -9,6 +9,13 @@ type RequestDiscounts struct {
 	} `json:"items"`
 }
 
+type RequestDiscountsItem struct {
+	Name      string `json:"name"`
+	Price_rur int    `json:"price_rur"`
+	Url       string `json:"url"`
+	Image     string `json:"image"`
+}
+
 type ResponseQuery struct {
 	Query string `json:"query"`
 }
@@ -20,6 +27,13 @@ type ProductDiscount struct {
 		Url       string `json:"url"`
 		Image     string `json:"image"`
 	} `json:"items"`
+}
+
+type ProductDiscountItem struct {
+	Name      string  `json:"name"`
+	Price_rur float64 `json:"price_rur"`
+	Url       string  `json:"url"`
+	Image     string  `json:"image"`
 }
 
 type SubscriptionRequest struct {

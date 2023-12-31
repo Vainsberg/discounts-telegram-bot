@@ -19,6 +19,7 @@ func NewPlatiClient(baseURL string) *PlatiClient {
 }
 
 func (c *PlatiClient) GetGoodsClient(queryText string) (*response.RequestDiscounts, error) {
+	var discounts response.RequestDiscounts
 	url := fmt.Sprintf("%s/api/search.ashx?query=%s&response=json", c.BaseURL, queryText)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -33,16 +34,14 @@ func (c *PlatiClient) GetGoodsClient(queryText string) (*response.RequestDiscoun
 		_ = resp.Body.Close()
 	}()
 
-	var discounts response.RequestDiscounts
 	err = json.Unmarshal(r, &discounts)
 	if err != nil {
 		return nil, fmt.Errorf("Error Unmarshal: %s", url, err)
 	}
-
 	return &discounts, nil
 }
 
-func DateFromDatebase(response response.RequestDiscounts) []byte {
+func ConvertRequestDiscountsToJSON(response response.RequestDiscounts) []byte {
 	var logger zap.Logger
 	respText, err := json.Marshal(response)
 	if err != nil {

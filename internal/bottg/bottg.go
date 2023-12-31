@@ -11,15 +11,11 @@ import (
 	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"go.uber.org/zap"
 )
 
-type RequestCron struct {
-	Logger *zap.Logger
-	Bot    *tgbotapi.BotAPI
-}
-
 func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbotapi.Update) {
+	var product response.TextMessage
+	var text string
 	if message.Text == "" {
 		errorMsg := "Неправильная форма заполнения. Пожалуйста, введите нормальное название товара."
 		reply := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
@@ -29,10 +25,9 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		}
 		return
 	}
-	userText := message.Text
-	checkUserText := pkg.ReplaceSpaceUrl(userText)
+	RepaleseUserText := pkg.ReplaceSpaceUrl(message.Text)
 
-	resp, err := http.Get("http://localhost:8080/discount?query=" + checkUserText + "&response=json")
+	resp, err := http.Get("http://localhost:8080/discount?query=" + RepaleseUserText + "&response=json")
 	if err != nil {
 		log.Println("Ошибка при создании HTTP-запроса:", err)
 		return
@@ -44,22 +39,19 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		log.Println("Ошибка при чтении тела ответа:", err)
 		return
 	}
-	var result response.TextMessage
 
-	err = json.Unmarshal(body, &result)
+	err = json.Unmarshal(body, &product)
 	if err != nil {
 		log.Println("Ошибка при разборе JSON:", err)
 		return
 	}
-	var text string
-	slice := result.Items
-	for _, v := range slice {
+
+	for _, v := range product.Items {
 		text = fmt.Sprintf(
 			"*%s*\n"+
 				"*Rub* _%v_\n"+
 				"*Ссылка* _%s_\n",
 			v.Name, v.Price_rur, v.Url)
-		chatID := update.Message.Chat.ID
 		respy, err := http.Get("https:" + v.Image)
 		if err != nil {
 			log.Println("Ошибка при получении изображения:", err)
@@ -68,12 +60,11 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 		defer respy.Body.Close()
 
 		reader := tgbotapi.FileReader{Name: "photo.jpg", Reader: respy.Body}
-		photoMsg := tgbotapi.NewPhoto(chatID, reader)
+		photoMsg := tgbotapi.NewPhoto(update.Message.Chat.ID, reader)
 		_, err = bot.Send(photoMsg)
 		if err != nil {
 			log.Println("Ошибка при отправке сообщения боту:", err)
 		}
-
 		msg := tgbotapi.NewMessage(message.Chat.ID, text)
 		msg.ParseMode = "markdown"
 		_, err = bot.Send(msg)
@@ -83,18 +74,14 @@ func HandleRequest(bot *tgbotapi.BotAPI, message *tgbotapi.Message, update *tgbo
 func HandleCallback(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 	callback := update.CallbackQuery
 	if callback.Data != "" {
-		userText := callback.Data
-		chatID := callback.Message.Chat.ID
-		ApiURL := "http://localhost:8080/subscribe"
-
-		payload := response.SubscriptionRequest{ChatID: chatID, Text: userText}
+		payload := response.SubscriptionRequest{ChatID: callback.Message.Chat.ID, Text: callback.Data}
 		payloadmash, err := json.Marshal(payload)
 		if err != nil {
 			fmt.Errorf("Ошибка Marshal JSON: %s", err)
 			return
 		}
 
-		resp, err := http.Post(ApiURL, "application/json", bytes.NewBuffer(payloadmash))
+		resp, err := http.Post("http://localhost:8080/subscribe", "application/json", bytes.NewBuffer(payloadmash))
 		if err != nil {
 			fmt.Println("Ошибка при выполнении запроса:", err)
 			return
@@ -106,34 +93,5 @@ func HandleCallback(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 			fmt.Errorf("Ошибка отправки сообщения callback: %s", err)
 			return
 		}
-	}
-}
-
-func (h *RequestCron) HandleRequestCron(goodDiscounts *response.ProductDiscount, chat int64) {
-	for _, v := range goodDiscounts.Items {
-		text := fmt.Sprintf(
-			"*%s*\n"+
-				"*Rub* _%v_\n"+
-				"*Ссылка* _%s_\n",
-			v.Name, v.Price_rur, v.Url)
-		chatID := chat
-		respy, err := http.Get("https:" + v.Image)
-		if err != nil {
-			log.Println("Ошибка при получении изображения:", err)
-			continue
-		}
-		defer respy.Body.Close()
-
-		reader := tgbotapi.FileReader{Name: "photo.jpg", Reader: respy.Body}
-		photoMsg := tgbotapi.NewPhoto(chatID, reader)
-		_, err = h.Bot.Send(photoMsg)
-		if err != nil {
-			log.Println("Ошибка при отправке сообщения боту:", err)
-		}
-
-		msg := tgbotapi.NewMessage(chatID, text)
-		msg.ParseMode = "markdown"
-		h.Logger.Info("Product withdrawal with a discount")
-		_, err = h.Bot.Send(msg)
 	}
 }

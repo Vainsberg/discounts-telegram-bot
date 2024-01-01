@@ -26,17 +26,17 @@ type Service struct {
 
 func NewService(
 	logger *zap.Logger,
-	discountsPlatiClient client.PlatiClient,
+	discountsPlatiClient *client.PlatiClient,
 	repositorySubs *repository.RepositorySubs,
-	discountsRepository repository.Repository,
-	bot tgbotapi.BotAPI,
+	discountsRepository *repository.Repository,
+	bot *tgbotapi.BotAPI,
 ) *Service {
 	return &Service{
 		Logger:               logger,
-		DiscountsPlatiClient: discountsPlatiClient,
+		DiscountsPlatiClient: *discountsPlatiClient,
 		SubsRepository:       *repositorySubs,
-		DiscountsRepository:  discountsRepository,
-		Bot:                  &bot,
+		DiscountsRepository:  *discountsRepository,
+		Bot:                  bot,
 	}
 }
 

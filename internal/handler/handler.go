@@ -16,10 +16,10 @@ import (
 type Handler struct {
 	Logger  *zap.Logger
 	Bot     *tgbotapi.BotAPI
-	Service service.Service
+	Service *service.Service
 }
 
-func NewHandler(logger *zap.Logger, bot *tgbotapi.BotAPI, service service.Service) *Handler {
+func NewHandler(logger *zap.Logger, bot *tgbotapi.BotAPI, service *service.Service) *Handler {
 	return &Handler{
 		Logger:  logger,
 		Bot:     bot,
@@ -78,7 +78,7 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 	h.Service.AddLinked(subscriptionRequest.ChatID, subscriptionRequest.Text)
 }
 
-func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DiscountsUpdate(w http.ResponseWriter, r *http.Request) {
 	err := h.Service.ProcessQueryAndFetchGoods()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

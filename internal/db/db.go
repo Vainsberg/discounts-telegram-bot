@@ -9,7 +9,6 @@ import (
 
 func CreateDB(cfg *viper.Config) *sql.DB {
 	var err error
-
 	db, err := sql.Open("mysql", cfg.DbUser+":"+cfg.DbPass+"@tcp(127.0.0.1:3306)/discounts")
 	if err != nil {
 		log.Fatal(err)

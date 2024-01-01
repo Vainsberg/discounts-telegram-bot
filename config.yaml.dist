@@ -1,2 +1,5 @@
 PassbymySQL: ''
 UserbymySQL: ''
+Apikey: ''
+CountCron: ''
+PlatiApiUrl: 'https://plati.io'

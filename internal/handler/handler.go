@@ -2,90 +2,86 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
-	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/service"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
-	DiscountsRepository  repository.Repository
-	DiscountsPlatiClient client.PlatiClient
-	SubsRepository       repository.RepositorySubs
+	Logger  *zap.Logger
+	Bot     *tgbotapi.BotAPI
+	Service *service.Service
 }
 
-func NewHandler(repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs) *Handler {
+func NewHandler(logger *zap.Logger, bot *tgbotapi.BotAPI, service *service.Service) *Handler {
 	return &Handler{
-		DiscountsRepository:  *repos,
-		DiscountsPlatiClient: *plati,
-		SubsRepository:       *subs,
+		Logger:  logger,
+		Bot:     bot,
+		Service: service,
 	}
 }
 
 func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
+	h.Logger.Info("Launch GetDiscounts")
+
 	query, err := pkg.GetQuery(r.URL.Query().Get("query"))
 	if err != nil {
-		fmt.Errorf("GetQuery error: %s", err)
+		h.Logger.Info("GetQuery error:", zap.Error(err))
 		return
 	}
-	CheckQueryText := pkg.Check(query)
-	responseN := h.DiscountsRepository.GetDiscountsByGoods(CheckQueryText)
+	ReplaceText := pkg.ReplaceSpaceUrl(query)
+	discountsByGoods := h.Service.DiscountsRepository.GetDiscountsByGoods(ReplaceText)
 
-	if len(responseN.Items) != 0 {
-		w.Write(client.DateFromDatebase(responseN))
+	if len(discountsByGoods.Items) != 0 {
+		w.Write(client.ConvertRequestDiscountsToJSON(discountsByGoods))
 		return
 	}
 
-	goods, err := h.DiscountsPlatiClient.GetGoodsClient(CheckQueryText)
+	goods := h.Service.FetchAndSaveGoods(ReplaceText)
+
+	bytes, err := json.Marshal(goods)
 	if err != nil {
-		fmt.Errorf("DiscountsPlatiClient error: %s", err)
-		return
-	}
-
-	for _, v := range goods.Items {
-		err := h.DiscountsRepository.SaveGood(v.Name, float64(v.Price_rur), v.Url, v.Image, CheckQueryText)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
-	respText, err := json.Marshal(goods)
-	if err != nil {
+		h.Logger.Info("Error encoding JSON response", zap.Error(err))
 		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
-		fmt.Println(err)
 		return
 	}
-	w.Write(respText)
-}
-
-type SubscriptionRequest struct {
-	ChatID int64  `json:"chat_id"`
-	Text   string `json:"text"`
+	w.Write(bytes)
 }
 
 func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
+	var subscriptionRequest response.SubscriptionRequest
+	h.Logger.Info("AddSubscription")
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Errorf("Read body error: %s", err)
+		h.Logger.Info("Read body error:", zap.Error(err))
 		return
-
 	}
 
 	if err != nil {
+		h.Logger.Info("Ошибка при чтении тела запроса", zap.Error(err))
 		http.Error(w, "Ошибка при чтении тела запроса", http.StatusBadRequest)
 		return
 	}
-	var result SubscriptionRequest
 
-	err = json.Unmarshal(body, &result)
+	err = json.Unmarshal(body, &subscriptionRequest)
 	if err != nil {
-		log.Println("Ошибка при разборе JSON:", err)
+		h.Logger.Info("Ошибка при разборе JSON:", zap.Error(err))
 		return
 	}
-	h.SubsRepository.AddLincked(result.ChatID, result.Text)
+	h.Service.AddLinked(subscriptionRequest.ChatID, subscriptionRequest.Text)
+}
+
+func (h *Handler) DiscountsUpdate(w http.ResponseWriter, r *http.Request) {
+	err := h.Service.ProcessQueryAndFetchGoods()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
 }

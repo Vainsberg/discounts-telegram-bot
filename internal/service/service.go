@@ -8,6 +8,7 @@ import (
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	cronhandler "github.com/Vainsberg/discounts-telegram-bot/internal/cron_handler"
+	"github.com/Vainsberg/discounts-telegram-bot/internal/dto"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
@@ -16,8 +17,7 @@ import (
 )
 
 type Service struct {
-	RepositoryQuerys     *repository.RepositorySubs
-	SubsRepository       *repository.RepositorySubs
+	SubsRepository       repository.RepositorySubs
 	Logger               *zap.Logger
 	DiscountsPlatiClient client.PlatiClient
 	DiscountsRepository  repository.Repository
@@ -27,16 +27,14 @@ type Service struct {
 func NewService(
 	logger *zap.Logger,
 	discountsPlatiClient client.PlatiClient,
-	repositoryQuerys *repository.RepositorySubs,
-	subsRepository *repository.RepositorySubs,
+	repositorySubs *repository.RepositorySubs,
 	discountsRepository repository.Repository,
 	bot tgbotapi.BotAPI,
 ) *Service {
 	return &Service{
 		Logger:               logger,
 		DiscountsPlatiClient: discountsPlatiClient,
-		RepositoryQuerys:     repositoryQuerys,
-		SubsRepository:       subsRepository,
+		SubsRepository:       *repositorySubs,
 		DiscountsRepository:  discountsRepository,
 		Bot:                  &bot,
 	}
@@ -60,7 +58,7 @@ func (s *Service) ProcessQueryAndFetchGoods() error {
 		}
 
 		for _, el := range goods.Items {
-			RequestDiscounts := response.RequestDiscountsItem{
+			RequestDiscounts := dto.Item{
 				Name:      el.Name,
 				Price_rur: el.Price_rur,
 				Url:       el.Url,
@@ -72,7 +70,7 @@ func (s *Service) ProcessQueryAndFetchGoods() error {
 	return nil
 }
 
-func (s *Service) processGoodsItem(item response.RequestDiscountsItem, query string) {
+func (s *Service) processGoodsItem(item dto.Item, query string) {
 	s.DiscountsRepository.SaveGood(item.Name, float64(item.Price_rur), item.Url, item.Image, query)
 	pastPrice := s.DiscountsRepository.SearchAveragePrice(float64(item.Price_rur), item.Url)
 
@@ -85,9 +83,9 @@ func (s *Service) processGoodsItem(item response.RequestDiscountsItem, query str
 			goodDiscounts := cronhandler.ProductDiscounts(item.Name, float64(item.Price_rur), item.Url, item.Image)
 
 			for _, v := range goodDiscounts.Items {
-				productDiscount := response.ProductDiscountItem{
+				productDiscount := dto.Item{
 					Name:      v.Name,
-					Price_rur: float64(v.Price_rur),
+					Price_rur: v.Price_rur,
 					Url:       v.Url,
 					Image:     v.Image,
 				}
@@ -97,7 +95,7 @@ func (s *Service) processGoodsItem(item response.RequestDiscountsItem, query str
 	}
 }
 
-func (s *Service) sendDiscount(item response.ProductDiscountItem, chatsID int64) {
+func (s *Service) sendDiscount(item dto.Item, chatsID int64) {
 	text := fmt.Sprintf(
 		"*%s*\n"+
 			"*Rub* _%v_\n"+
@@ -137,4 +135,8 @@ func (s *Service) FetchAndSaveGoods(CheckQueryText string) *response.RequestDisc
 		}
 	}
 	return goods
+}
+
+func (s *Service) AddLinked(chatID int64, requestText string) error {
+	return s.SubsRepository.AddLincked(chatID, requestText)
 }

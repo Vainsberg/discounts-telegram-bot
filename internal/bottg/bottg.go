@@ -95,3 +95,32 @@ func HandleCallback(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 		}
 	}
 }
+
+func RunBot(bot *tgbotapi.BotAPI) {
+	bot.Debug = true
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+	updates := bot.GetUpdatesChan(u)
+
+	go func() {
+		for update := range updates {
+			if update.Message != nil {
+				HandleRequest(bot, update.Message, &update)
+				userText := update.Message.Text
+				replyKeyboard := tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Подписаться на скидки", userText),
+					),
+				)
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Нажми на кнопку для подписки на товар :)")
+				msg.ReplyMarkup = replyKeyboard
+				if _, err := bot.Send(msg); err != nil {
+					panic(err)
+				}
+			} else if update.CallbackQuery != nil {
+				HandleCallback(bot, &update)
+			}
+		}
+	}()
+}

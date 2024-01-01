@@ -7,7 +7,6 @@ import (
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
 	pkg "github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
-	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/response"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/service"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -15,24 +14,16 @@ import (
 )
 
 type Handler struct {
-	Logger               *zap.Logger
-	DiscountsRepository  repository.Repository
-	DiscountsPlatiClient client.PlatiClient
-	SubsRepository       repository.RepositorySubs
-	RepositoryQuerys     repository.RepositorySubs
-	Bot                  *tgbotapi.BotAPI
-	Service              service.Service
+	Logger  *zap.Logger
+	Bot     *tgbotapi.BotAPI
+	Service service.Service
 }
 
-func NewHandler(logger *zap.Logger, repos *repository.Repository, plati *client.PlatiClient, subs *repository.RepositorySubs, querys *repository.RepositorySubs, bot *tgbotapi.BotAPI, service service.Service) *Handler {
+func NewHandler(logger *zap.Logger, bot *tgbotapi.BotAPI, service service.Service) *Handler {
 	return &Handler{
-		Logger:               logger,
-		DiscountsRepository:  *repos,
-		DiscountsPlatiClient: *plati,
-		SubsRepository:       *subs,
-		RepositoryQuerys:     *querys,
-		Bot:                  bot,
-		Service:              service,
+		Logger:  logger,
+		Bot:     bot,
+		Service: service,
 	}
 }
 
@@ -45,7 +36,7 @@ func (h *Handler) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ReplaceText := pkg.ReplaceSpaceUrl(query)
-	discountsByGoods := h.DiscountsRepository.GetDiscountsByGoods(ReplaceText)
+	discountsByGoods := h.Service.DiscountsRepository.GetDiscountsByGoods(ReplaceText)
 
 	if len(discountsByGoods.Items) != 0 {
 		w.Write(client.ConvertRequestDiscountsToJSON(discountsByGoods))
@@ -84,7 +75,7 @@ func (h *Handler) AddSubscription(w http.ResponseWriter, r *http.Request) {
 		h.Logger.Info("Ошибка при разборе JSON:", zap.Error(err))
 		return
 	}
-	h.SubsRepository.AddLincked(subscriptionRequest.ChatID, subscriptionRequest.Text)
+	h.Service.AddLinked(subscriptionRequest.ChatID, subscriptionRequest.Text)
 }
 
 func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
@@ -93,5 +84,4 @@ func (h *Handler) GetQuerysCron(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
-
 }

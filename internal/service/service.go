@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Vainsberg/discounts-telegram-bot/internal/client"
-	cronhandler "github.com/Vainsberg/discounts-telegram-bot/internal/cron_handler"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/dto"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/pkg"
 	"github.com/Vainsberg/discounts-telegram-bot/internal/repository"
@@ -80,7 +79,7 @@ func (s *Service) processGoodsItem(item dto.Item, query string) {
 		if rebate >= 20 {
 			s.Logger.Info("Finding the updated price", zap.Int("Price_rur", item.Price_rur))
 			chatsID := s.SubsRepository.SearchChatID(query)
-			goodDiscounts := cronhandler.ProductDiscounts(item.Name, float64(item.Price_rur), item.Url, item.Image)
+			goodDiscounts := ProductDiscounts(item.Name, float64(item.Price_rur), item.Url, item.Image)
 
 			for _, v := range goodDiscounts.Items {
 				productDiscount := dto.Item{
@@ -139,4 +138,16 @@ func (s *Service) FetchAndSaveGoods(CheckQueryText string) *response.RequestDisc
 
 func (s *Service) AddLinked(chatID int64, requestText string) error {
 	return s.SubsRepository.AddLincked(chatID, requestText)
+}
+
+func ProductDiscounts(name string, price_rur float64, url string, image string) response.ProductDiscount {
+	var product response.ProductDiscount
+
+	product.Items = append(product.Items, dto.Item{
+		Name:      name,
+		Price_rur: int(price_rur),
+		Url:       url,
+		Image:     image,
+	})
+	return product
 }

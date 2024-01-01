@@ -51,7 +51,7 @@ func main() {
 
 	repositoryGoods := repository.NewRepository(db)
 	RepositorySubs := repository.NewRepositorySubs(db)
-	api := client.NewPlatiClient("https://plati.io")
+	api := client.NewPlatiClient(cfg.PlatiApiUrl)
 	service := service.NewService(logger, api, RepositorySubs, repositoryGoods, bot)
 	handler := handler.NewHandler(logger, bot, service)
 	http.HandleFunc("/discount", handler.GetDiscounts)

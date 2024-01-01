@@ -75,13 +75,13 @@ func HandleCallback(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 	callback := update.CallbackQuery
 	if callback.Data != "" {
 		payload := response.SubscriptionRequest{ChatID: callback.Message.Chat.ID, Text: callback.Data}
-		payloadmash, err := json.Marshal(payload)
+		payloadBytes, err := json.Marshal(payload)
 		if err != nil {
 			fmt.Errorf("Ошибка Marshal JSON: %s", err)
 			return
 		}
 
-		resp, err := http.Post("http://localhost:8080/subscribe", "application/json", bytes.NewBuffer(payloadmash))
+		resp, err := http.Post("http://localhost:8080/subscribe", "application/json", bytes.NewBuffer(payloadBytes))
 		if err != nil {
 			fmt.Println("Ошибка при выполнении запроса:", err)
 			return

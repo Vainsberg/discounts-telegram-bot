@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	DbUser    string
-	DbPass    string
-	Apikey    string
-	CountCron string
+	DbUser      string
+	DbPass      string
+	Apikey      string
+	CountCron   string
+	PlatiApiUrl string
 }
 
 func NewConfig() (*Config, error) {
@@ -26,6 +27,7 @@ func NewConfig() (*Config, error) {
 	dbPass := viper.GetString("PassbymySQL")
 	apiKey := viper.GetString("ApiKey")
 	countCron := viper.GetString("CountCron")
+	platiApiUrl := viper.GetString("PlatiApiUrl")
 
-	return &Config{DbUser: dbUser, DbPass: dbPass, Apikey: apiKey, CountCron: countCron}, nil
+	return &Config{DbUser: dbUser, DbPass: dbPass, Apikey: apiKey, CountCron: countCron, PlatiApiUrl: platiApiUrl}, nil
 }

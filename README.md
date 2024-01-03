@@ -1,7 +1,7 @@
 # discounts-telegram-bot
 
 ## Description 
-**Telegram bot for searching for goods and tracking discounts on them**
+**Telegram bot for Search for discounts on keys, games, accounts**
 
 ### Configuration Values
 - `Apikey` - Get it by contacting to [BotFather](https://t.me/botfather)
